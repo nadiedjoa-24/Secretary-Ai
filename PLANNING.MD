@@ -1,42 +1,36 @@
 ```mermaid
 gantt
     title Planification ARTISHOW 
-    dateFormat  DD/MM/YYYY
-    axisFormat  %d/%m/%Y
+    dateFormat  DD-MM-YYYY
 
-    section COMMUN 
-    Evaluation des taches       :done , 02/02/2025, 18/02/2025
-    Répartition des tâches       :active, 18/02/2025, 02/03/2025
-    Architecture logiciel        :active,    b1, 18/02/2025, 02/03/2025
-    Mise en commun + debbug     : 18/05/2025, 15/06/2025
+    section General
+        Définition des formats (planning/rdv/patient)                   :a1, 04-03-2025, 20d
+        Création d'un planning                                          :20d
+        Créer un format pour un rdv                                     :20d
+        Créer un format/BDD l'accès à la patientèle                     :20d 
 
-    section Yanic - Développement logiciel / Managing
-    Système de login       :  a2, 02/03/2025, 20/04/2025
-    Interface pro (Planning rdv) :    b2, 30/03/2025, 04/05/2025
-    Interface pro (Communication avec assistant pour déprogrammation, …) :    b2, 20/04/2025, 18/05/2025
-    Interface pro (doss patient sur plann) :    b2, 04/05/2025, 18/05/2025
+    section Planner AGENT
+        Accès planning                                                  :b1, 04-03-2025, 10d 
+        Gestion des horaires d'un médecin pour chaque jour              :30d
+        Vérif dispo                                                     :10d 
+        Ajout / Supr de rdv                                             :10d 
+        Proposition d'horaires (dép rdv)                                :30d
 
-
-    section Agshay - Développement logiciel
-    Interface patient (Prise de rdv par assistant) :    b1, 02/03/2025, 30/03/2025
-    Interface patient (Planning rdv) :    b2, 30/03/2025, 04/05/2025
-    Interface patient (Dossier medical) :    b3, 04/05/2025, 18/05/2025
-    
-
-    section Antoine - Assistant de gestion boîte mail
-    Login + gestion boite mail dans un script :     c1, 02/03/2025, 23/03/2025
-    Assistant IA pour classer les mails:    c2, 23/03/2025, 06/04/2025
-    Prise de rdv + annulation par mail:     c3, 06/04/2025, 04/05/2025
-    Résumé boite mail pour jour donné : c4, 04/05/2025, 18/05/2025
+    section Vocal AGENT
+        Speech-to-Text                                                  :c1, 04-03-2025, 20d 
+        Text-to-Speech                                                  :20d 
+        Prise de rdv (dialogue pour remplir rdv)                        :30d 
+        Annulation/Déplacement de rdv                                   :30d 
 
 
-    section Théophile - Assistant vocal et gestion de planning
-    Création structure  Planning  : 02/03/2025, 16/03/2025
-    Interactions planning : 16/03/2025, 06/04/2025
-    Assistant gestion intelligente du planning (en comm avec assist vocal): 06/04/2025, 18/05/2025
+    section Email AGENT
+        Ouverture + connexion à une boite mail                          :d1, 04-03-2025, 15d 
+        Tri des mails                                                   :20d 
+        Résumé des points importants (mails non lus)                    :20d 
+        Gestion des annulations et déplacements de rdv                  :30d 
 
 
-    section Yifan - Assistant vocal et gestion de planning
-    Speech to text  + text to speech : 02/03/2025, 16/03/2025
-    Connexion telephonique avec twilio : 16/03/2025, 06/04/2025
-    Assistant vocal + comm avec assistant planning : 06/04/2025, 18/05/2025
+    section Ordonnance AGENT
+        définir un format d'ordonnance                                  :e1, 04-03-2025, 20d
+        Récupérer les info d'une ordonnance                             : 30d 
+        Génerer une ordonnance pdf (sur une base de templates préfaits) :40d 
