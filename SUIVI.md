@@ -9,3 +9,9 @@ Mails : Antoine Ollivier
 Planning : Théophile et Yifan
 Reconnaissance Vocale : Théophile Nadiedjoa et Yifan Wang
 Application : Yannic et Agshay
+
+Mardi 25/02 : On a eu un entretien avec une secrétaire qui n'était pas très ouverte aux questions, le choix n'était pas bon, car forcément qu'une secrétaire
+ne serait pas très ouverte à nos questions car elle pourrait penser que notre projet consiste à la remplacer, or non ce n'est pas le cas, on souhaite que notre projet
+lui permette d'éviter des faire tout le temps les mêmes tâches.
+
+Mardi 04/03:
