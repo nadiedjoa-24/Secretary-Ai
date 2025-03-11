@@ -1,3 +1,4 @@
+import os
 import json
 from datetime import datetime, timedelta
 from typing import Literal
@@ -36,16 +37,30 @@ class Appointment(BaseModel):
     
 
 class Planning:
-
     def __init__(self, year: int):
         self.year = year
         self.planning = None
         self.rplanning = None 
-        self._path = str(year) + "_planning.json"
-        self._rpath = str(year) + "_rplanning.json"
+        self._path = f"{year}_planning.json"
+        self._rpath = f"{year}_rplanning.json"
+        
         self.load_from_file()
 
-
+    def load_from_file(self):
+        L = [(self._path, 'planning'), (self._rpath, 'rplanning')]
+        for file_path, planning_attr in L:
+            if os.path.exists(file_path):
+                with open(file_path, 'r') as f:
+                    content = f.read().strip()
+                    if content:
+                        setattr(self, planning_attr, json.loads(content))
+                        print(f"✅ Chargement réussi : {file_path}")
+                    else:
+                        print(f"⚠️ Fichier {file_path} vide. Initialisation nécessaire.")
+                        self.initialize_full_year()
+            else:
+                print(f"⚠️ Fichier {file_path} introuvable. Initialisation nécessaire.")
+                self.initialize_full_year()
 
     def save_to_file(self):
         L = [(self._path, 'planning'), (self._rpath, 'rplanning')]
@@ -53,19 +68,6 @@ class Planning:
             planning = getattr(self, planning_attr)
             with open(file_path, 'w') as f:
                 json.dump(planning, f)
-
-
-    def load_from_file(self):
-        L = [(self._path, 'planning'), (self._rpath, 'rplanning')]
-        for file_path, planning_attr in L:
-            with open(file_path, 'r') as f:
-                content = f.read().strip()
-                if not content:
-                    self.initialize_full_year()
-                else:
-                    setattr(self, planning_attr, json.loads(content))
-                    print('success')
-
 
     def initialize_full_year(self):
         self.planning = {}
@@ -78,6 +80,9 @@ class Planning:
                 self.planning[str(month)][str(day)] = {"John": [], "Smith": [], "Robert": []}
                 self.rplanning[str(month)][str(day)] = {"John": [["08:00", "12:00"], ["13:30", "18:00"]], "Smith": [["08:00", "12:00"], ["13:30", "18:00"]], "Robert": [["08:00", "12:00"], ["13:30", "18:00"]]}
         self.save_to_file()
+        print("✅ Planning initialisé et sauvegardé.")
+
+
 
 
     def is_available(self, appointment: Appointment):
