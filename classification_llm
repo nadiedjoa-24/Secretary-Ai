@@ -23,6 +23,6 @@ https://github.com/facebookresearch/fairseq/tree/main/examples/speech_to_speech 
 Generative speech models: 
 
 https://github.com/google-deepmind/sonnet/blob/v1/sonnet/examples/vqvae_example.ipynb : Utilisé pour encoder la parole dans un espace latent discret, puis la décoder en parole modifiée.
-Kyutai : 
+Kyutai : https://github.com/kyutai-labs/hibiki : git mais que de hibiki, pas de code?
 https://github.com/lmnt-com/diffwave : Un modèle de génération de parole basé sur des réseaux de diffusion, qui peut être adapté pour des transformations directes de la parole.
 https://github.com/auspicious3000/SpeechSplit : Un modèle qui sépare et recombine les caractéristiques de la parole (comme le timbre et le contenu) pour des transformations directes. 
