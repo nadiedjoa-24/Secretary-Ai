@@ -15,3 +15,6 @@ ne serait pas très ouverte à nos questions car elle pourrait penser que notre 
 lui permette d'éviter des faire tout le temps les mêmes tâches.
 
 Mardi 04/03:
+
+
+Mardi 18/03 : Yifan : J'ai essayé d'implémenter llama sur un gpu mais même avec les commandes cmake et tout je rencontre des erreurs.
