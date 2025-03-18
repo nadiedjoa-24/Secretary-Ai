@@ -49,6 +49,8 @@ cmake --build build --config Release -j $(nproc)
 ```
 
 le ` nrpoc `signifie que l'on prend tous les coeurs dispo.
+
+
 ---
 
 ## 3. Téléchargement du Modèle Mistral 7B GGUF
