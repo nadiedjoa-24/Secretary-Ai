@@ -13,7 +13,7 @@ def text_to_speech1(text):
     engine.say(text)
     engine.runAndWait()
 
-# text = "Yifan caca pipi prout"
+# text = "Bonjour, ceci est un test de synthèse vocale en Python."
 # text_to_speech1(text)
 
 
@@ -24,5 +24,5 @@ def text_to_speech2(text, lang="fr"):
     playsound.playsound(filename)
     os.remove(filename)  # Supprime le fichier après lecture
 
-text = "Bonjour, ceci est un test de synthèse vocale en Python."
-text_to_speech2(text)
+#text = "Bonjour, ceci est un test de synthèse vocale en Python."
+#text_to_speech2(text)
