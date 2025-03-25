@@ -106,3 +106,24 @@ CUDA_VISIBLE_DEVICES=0 ./build/bin/llama-cli -m models/mistral-7b-instruct-v0.2.
 
 ---
 
+
+
+## 5. Charger les modèles en local et les executer sur gpu à partir de packages python
+
+- Pour charger des modèles depuis hugging face directement depuis hugging face, utiliser le package `transformer`.
+- Pour charger les modèles depuis llama.cpp, installer le package sur la ligne de commande en spécifiant l'installation du package sur gpu : 
+
+```bash
+pip install llama-cpp-python[cuda]
+```
+ou
+```bash
+CMAKE_ARGS="-DGGML_CUDA=on" pip install llama-cpp-python --force-reinstall --no-cache-dir
+```
+
+
+## 6. API de networking pour exécuter les modèles sur gpu à distance 
+
+- Exécuter le script `serveur.py` sur le gpu (il faut cloner le repo pour avoir accès à ai_controller).
+- On peut ensuite soit utiliser la ligne de commande avec `CURL`en méthode `POST` ou exécuter le script `client.py` pour intéragir.
+- La classe `Client` permet de l'intégrer à d'autres scripts.
