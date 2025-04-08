@@ -35,10 +35,10 @@
 - **Progrès en reconnaissance vocale** (Yifan) :
   - J'ai enfin réussi à implémenter ( Whispers )
   - Taux de précision de 85% sur les tests initiaux
-  - **Prochaines étapes** :
+  - **Prochaines étapes** :  - Essayer de lier tous nos projets
 
 ## Mardi 8 avril 2025
 -**Théophile : Implémentation d'un programme text_to_speech avec plusieurs voix.
 -** Yifan : Difficultés liés au programme text_to_speed étant donné que sur le GPU il n'y a pas de périphérique audio, donc une solution doit être trouvée
  
-    - Essayer de lier tous nos projets
+   
