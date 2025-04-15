@@ -41,4 +41,10 @@
 -**Théophile : Implémentation d'un programme text_to_speech avec plusieurs voix.
 -** Yifan : Difficultés liés au programme text_to_speed étant donné que sur le GPU il n'y a pas de périphérique audio, donc une solution doit être trouvée
 -** Yifan : Je commence à implémenter Mistral qui à un texte ( transcrit au dessus d'un fichier mp3) va react dessus afin de donner son avis 
-   
+
+## Mardi 15 avril 2025
+-** Yifan : 
+-**Théophile : 
+-** Agshay : 
+-**Antoine
+-**Yanic
