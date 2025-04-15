@@ -1,17 +1,24 @@
 from openai import OpenAI
-from elevenlabs.client import ElevenLabs
-from elevenlabs import play
-import speech_recognition as sr
 from datetime import datetime, timedelta
-import smtplib
+from elevenlabs import play
 from email.mime.text import MIMEText
+import speech_recognition as sr
 import re
-from planning import Planning, Appointment
 import json
 from typing import Literal
 from pydantic import BaseModel
+import os
+from pathlib import Path
+import sys
+sys.path.append("/Users/yanicrothlingshofer/Desktop/Telecom Paris/1A/ARTISHOW/secretaryai/ai_agents/tools")
+from planning import Planning, Appointment
+from dotenv import load_dotenv
+import pygame
 
 
+
+env_path = Path(__file__).resolve().parents[1] / ".env"
+load_dotenv(dotenv_path=env_path)
 
 def is_available(planning: Planning, appointment: Appointment):
     return planning.is_available(appointment)
@@ -26,111 +33,16 @@ def add_appointment(planning: Planning, appointment: Appointment):
     planning.add(appointment)
 
 
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "is_available",
-            "description": "Check if a specific appointment is available in the planning.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "planning": {
-                        "type": "object",
-                        "description": "The planning object containing the schedule for the year."
-                    },
-                    "appointment": {
-                        "type": "object",
-                        "description": "The appointment details to check.",
-                        "properties": {
-                            "last_name": {"type": "string"},
-                            "first_name": {"type": "string"},
-                            "date_of_birth": {"type": "string"},
-                            "month": {"type": "integer"},
-                            "day": {"type": "integer"},
-                            "time": {"type": "string"},
-                            "doctor": {
-                                "type": "string",
-                                "enum": ["John", "Smith", "Robert"]
-                            }
-                        },
-                        "required": ["month", "day", "time", "doctor"]
-                    }
-                },
-                "required": ["planning", "appointment"],
-                "additionalProperties": False
-            },
-            "strict": True
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "access_planning",
-            "description": "Retrieve the schedule for specific months from the planning.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "planning": {
-                        "type": "object",
-                        "description": "The planning object to access."
-                    },
-                    "months": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "A list of months (as strings) to retrieve."
-                    }
-                },
-                "required": ["planning", "months"],
-                "additionalProperties": False
-            },
-            "strict": True
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "add_appointment",
-            "description": "Add an appointment to the planning.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "planning": {
-                        "type": "object",
-                        "description": "The planning object to modify."
-                    },
-                    "appointment": {
-                        "type": "object",
-                        "description": "The appointment details to add.",
-                        "properties": {
-                            "last_name": {"type": "string"},
-                            "first_name": {"type": "string"},
-                            "date_of_birth": {"type": "string"},
-                            "month": {"type": "integer"},
-                            "day": {"type": "integer"},
-                            "time": {"type": "string"},
-                            "doctor": {
-                                "type": "string",
-                                "enum": ["John", "Smith", "Robert"]
-                            }
-                        },
-                        "required": ["last_name", "first_name", "date_of_birth", "month", "day", "time", "doctor"]
-                    }
-                },
-                "required": ["planning", "appointment"],
-                "additionalProperties": False
-            },
-            "strict": True
-        }
-    }
-]
-
 
 class AI_Assistant:
+
+    api_key = os.getenv("OPENAI_API_KEY2")
+    print(api_key)
+
     def __init__(self):
-        self.openai_client = OpenAI(api_key="***REMOVED-OPENAI-KEY-1***")
+        self.openai_client = OpenAI(api_key=self.api_key)
         self.elevenlabs_api_key = "sk_e487e38360d8f73dbcc8ebc23b6f6513c56486cc167e55e4"
-        self.elevenlabs_client = ElevenLabs(api_key=self.elevenlabs_api_key)
+        # self.elevenlabs_client = ElevenLabs(api_key=self.elevenlabs_api_key)
         self.planning = Planning(2025)
         self.current_date = datetime.today()
         print(self.planning.rplanning["2"]["15"]["Smith"])
@@ -221,7 +133,7 @@ class AI_Assistant:
         print(f"\nPatient: {transcript}")
 
         response = self.openai_client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="4o-mini",
             messages=self.full_transcript
         )
 
@@ -252,26 +164,38 @@ class AI_Assistant:
         audio_data = audio.get_wav_data()
 
         response = self.openai_client.audio.transcriptions.create(
-            model="whisper-1",
-            file=("audio.wav", audio_data, "audio/wav")
+            model="gpt-4o-mini-transcribe",
+            file=("audio.wav", audio_data, "audio/wav"),
+            response_format="text"
         )
 
-        return response.text if response.text else None
+        return response if response else None
     
 
 
     def generate_audio(self, text):
-        audio = self.elevenlabs_client.generate(
-            text=text,
-            voice="Brian",
-            stream=True
+        speech_file_path = Path(__file__).parent / "speech.mp3"
+        audio = self.openai_client.audio.speech.create(
+            model="gpt-4o-mini-tts",
+            voice="coral",
+            input=text,
+            # instructions="Speak in a cheerful and positive tone but not overly excited.",
         )
-        play(audio)
+        audio.stream_to_file(speech_file_path)
+        pygame.mixer.init()
+        pygame.mixer.music.load(str(speech_file_path))
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy():
+            continue
 
 
 
     def start_conversation(self):
+
         message = self.start_listening()
+        if message is None:
+            print("⚠️ Aucun message détecté, on recommence...")
+            return
         # message = input()
         self.full_transcript.append({"role": "user", "content": message})
         self.patient_inputs.append({"role": "user", "content": message})
