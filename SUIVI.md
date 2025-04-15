@@ -23,28 +23,24 @@
   - **Analyse** : Mauvais choix d'interlocuteur - une secrétaire pourrait percevoir notre projet comme une menace pour son emploi alors qu'il vise à l'aider en automatisant les tâches répétitives
 
 ## Mardi 4 mars 2025
-- 
+-(Yannick): Création d'un planning pour les rdv avec des données spécifiées
 
 ## Mardi 18 mars 2025
-- **Avancement technique** (Yifan) :
-  - Tentative d'implémentation de LLaMA sur GPU
-  - Difficultés rencontrées malgré l'utilisation des commandes CMake
-  - Plusieurs erreurs bloquantes
+-(Yifan) : implémentation de LLaMA sur GPU
+-(Antoine):  Création d'un premier modèle text-to-speech en utilisant pyttsx3 ou gtts 
 
 ## Mardi 25 mars 2025
-- **Progrès en reconnaissance vocale** (Yifan) :
-  - J'ai enfin réussi à implémenter ( Whispers )
-  - Taux de précision de 85% sur les tests initiaux
-  - **Prochaines étapes** :  - Essayer de lier tous nos projets
+-(Yifan) : implémentation de Whispers pour la voix de l'IA
 
 ## Mardi 8 avril 2025
--**Théophile : Implémentation d'un programme text_to_speech avec plusieurs voix.
--** Yifan : Difficultés liés au programme text_to_speed étant donné que sur le GPU il n'y a pas de périphérique audio, donc une solution doit être trouvée
--** Yifan : Je commence à implémenter Mistral qui à un texte ( transcrit au dessus d'un fichier mp3) va react dessus afin de donner son avis 
+-(Théophile) : Implémentation d'un programme text_to_speech avec plusieurs voix avec Whispers
+-(Théophile) : Test programme text_to_speech avec evenlabs
+-(Yifan) :  Mise en place de Mistral pour répondre aux clients
+-(Agshay) : test de speech_to_text sur GPU avec Mistral et Whispers
 
 ## Mardi 15 avril 2025
--** Yifan : 
--**Théophile : 
--** Agshay : 
--**Antoine
+-(Yifan) : 
+-(Théophile) : 
+-(Agshay) : 
+-(Antoine):
 -**Yanic
