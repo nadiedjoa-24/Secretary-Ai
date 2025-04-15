@@ -41,6 +41,6 @@
 ## Mardi 15 avril 2025
 -(Yifan) : 
 -(Théophile) : 
--(Agshay) : 
+-(Agshay) : Merge des 2 branches (master/main) + Résolution conflits + arrangement du Git
 -(Antoine):
 -**Yanic
