@@ -39,7 +39,7 @@
 -(Agshay) : test de speech_to_text sur GPU avec Mistral et Whispers
 
 ## Mardi 15 avril 2025
--(Yifan) : 
+-(Yifan) :  Planning 
 -(Théophile) : 
 -(Agshay) : Merge des 2 branches (master/main) + Résolution conflits + arrangement du Git
 -(Antoine):
