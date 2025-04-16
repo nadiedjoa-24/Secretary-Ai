@@ -11,13 +11,13 @@ class Client:
         try:
             response = requests.get(f"{self.server_url}/docs", timeout=5)
             if response.status_code == 200:
-                print("✅ Connexion établie avec succès au serveur !")
+                print("🟢Connexion établie avec succès au serveur !")
             else:
-                print(f"⚠️ Réponse inattendue du serveur : {response.status_code}")
+                print(f"Réponse inattendue du serveur : {response.status_code}")
         except requests.ConnectionError:
-            print("❌ Impossible de se connecter au serveur. Vérifiez l'adresse et que le serveur est bien démarré.")
+            print("🔴Impossible de se connecter au serveur. Vérifiez l'adresse et que le serveur est bien démarré.")
         except requests.Timeout:
-            print("❌ Temps d'attente dépassé. Vérifiez si le serveur est accessible.")
+            print("🔴Temps d'attente dépassé. Vérifiez si le serveur est accessible.")
 
     def generate(self, prompt, max_new_tokens=50):
         data = {"prompt": prompt, "max_new_tokens": max_new_tokens}
@@ -26,10 +26,10 @@ class Client:
             if response.status_code == 200:
                 return response.json()["response"]
             else:
-                print("⚠️ Erreur lors de la requête :", response.status_code, response.text)
+                print("Erreur lors de la requête :", response.status_code, response.text)
                 return None
         except Exception as e:
-            print("❌ Erreur lors de l'envoi de la requête :", e)
+            print("Erreur lors de l'envoi de la requête :", e)
             return None
         
 

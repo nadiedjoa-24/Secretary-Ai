@@ -145,12 +145,12 @@ class AI_Assistant:
 
 
     def start_listening(self):
-        print("🎤 En attente de parole...")
+        print("🎤 En attente de parole")
         with self.microphone as source:
             self.recognizer.adjust_for_ambient_noise(source)
             audio = self.recognizer.listen(source)
         
-        print("🎙️ Envoi à Whisper API...")
+        print("🎙️ Transcription : ")
         try:
             transcript = self.transcribe_audio(audio)
             return transcript 
@@ -177,9 +177,9 @@ class AI_Assistant:
         speech_file_path = Path(__file__).parent / "speech.mp3"
         audio = self.openai_client.audio.speech.create(
             model="gpt-4o-mini-tts",
-            voice="coral",
+            voice="alloy",
             input=text,
-            # instructions="Speak in a cheerful and positive tone but not overly excited.",
+            # instructions="use a monotone tone.",
         )
         audio.stream_to_file(speech_file_path)
         pygame.mixer.init()
@@ -194,7 +194,7 @@ class AI_Assistant:
 
         message = self.start_listening()
         if message is None:
-            print("⚠️ Aucun message détecté, on recommence...")
+            print("⚠️ Aucun message détecté, on recommence :")
             return
         # message = input()
         self.full_transcript.append({"role": "user", "content": message})
@@ -205,7 +205,7 @@ class AI_Assistant:
             self.planning.add(appointment)
             self.full_transcript.append({"role":"system", "content":"Le rendez vous a bien été ajouté."})
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages = self.full_transcript
             ).choices[0].message.content
             self.generate_audio(response)
