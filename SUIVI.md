@@ -48,7 +48,7 @@
 ## Mardi 8 avril 2025
 - (Théophile) : Implémentation d'un programme text_to_speech avec plusieurs voix avec Whispers
 - (Théophile) : Test programme text_to_speech avec evenlabs
-- (Yifan) : Mise en place de Mistral pour répondre aux clients
+- (Yifan) : Mise en place de Mistral pour répondre aux clients + documentation API à distance
 - (Agshay) : Test de speech_to_text sur GPU avec Mistral et Whispers
 - (Yanic) : Mise en place d'un script permettant de mettre en serveur un bot AI sur le GPU à distance
 
@@ -57,11 +57,11 @@
 - (Théophile) : Optimisation du pipeline vocal (du texte à la réponse audio)
 - (Agshay) : Merge des 2 branches (master/main) + Résolution conflits + arrangement du Git
 - (Antoine) : Préparation d'une présentation intermédiaire du projet
-- (Yanic) : Déploiement du bot sur serveur distant + tests de stabilité
+- (Yanic) : Déploiement du bot sur serveur distant
 
 ## Mercredi 16 avril 2025
 - (Yifan) : Configuration finale de l’environnement distant + tests de latence
-- (Théophile) : Finalisation de la documentation technique pour la partie vocale
-- (Agshay) : Test utilisateur simulé du flux complet (voix -> réponse IA -> voix)
-- (Yanic) : Rédaction d’un rapport d’étape sur l’état du déploiement
-- (Antoine) : Création d’un support de communication pour la suite (affiche, slides, etc.)
+- (Théophile) :documentation technique pour la partie vocale
+- (Agshay) : Test utilisateur 
+- (Yanic) : Rédaction de l'état de l'art pour tout ce qui est en rapport avec les voix, whispers et tout.
+- (Antoine) : Création d’un support de communication pour la suite
