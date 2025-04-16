@@ -41,8 +41,8 @@ class AI_Assistant:
 
     def __init__(self):
         self.openai_client = OpenAI(api_key=self.api_key)
-        self.elevenlabs_api_key = "sk_e487e38360d8f73dbcc8ebc23b6f6513c56486cc167e55e4"
-        # self.elevenlabs_client = ElevenLabs(api_key=self.elevenlabs_api_key)
+        # self.elevenlabs_api_key = "sk_e487e38360d8f73dbcc8ebc23b6f6513c56486cc167e55e4"
+        # # self.elevenlabs_client = ElevenLabs(api_key=self.elevenlabs_api_key)
         self.planning = Planning(2025)
         self.current_date = datetime.today()
         print(self.planning.rplanning["2"]["15"]["Smith"])

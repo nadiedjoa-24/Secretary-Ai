@@ -16,8 +16,6 @@
 - Variante exploratoire de Whisper orientée génération vocale (non publique).
 - Possibilité de conversion texte-parole dans une boucle interactive.
 
-### Voice Engine (rumeur 2024)
-- Modèle expérimental d’OpenAI, centré sur la conversion voix ↔ voix avec style et accent.
 
 ## ElevenLabs
 
@@ -47,10 +45,7 @@
 - Extension multilingue de VALL-E avec capacité cross-lingue.
 - Permet de lire un texte dans une langue tout en gardant l'accent d’une autre langue.
 
-### YourTTS (co-développé avec Inria)
-- Clonage vocal multilingue zero-shot.
-- Basé sur VITS.
-- Open source.
+
 
 ## Google / DeepMind
 
@@ -63,14 +58,7 @@
 - Modèle non autoregressif, type "SoundStream-like".
 - Génère directement l'audio avec contrôle temporel.
 
-### StyleTTS & StyleTTS2
-- Contrôle explicite du style vocal (joyeux, sérieux...).
-- Zéro-shot speaker cloning.
-- Convient bien à la narration et au voice-over émotionnel.
 
-### AudioLM + SynthID
-- AudioLM : génération audio multi-étapes (tokens audio).
-- SynthID : watermarking invisible pour vérifier les voix synthétiques.
 
 ## Meta
 
@@ -168,7 +156,7 @@
 - Variante légère intégrée dans les agents vocaux GPT.
 - Optimisé pour faible latence, bonne expressivité.
 
-### Whisper-TTS (prototype interne)
+### Whisper-TTS 
 - Variante exploratoire de Whisper orientée génération vocale (non publique).
 - Possibilité de conversion texte-parole dans une boucle interactive.
 
@@ -196,14 +184,6 @@
 - Expressivité et style conservés.
 - Pas open source, mais publication scientifique disponible.
 
-### VALL-E X
-- Extension multilingue de VALL-E avec capacité cross-lingue.
-- Permet de lire un texte dans une langue tout en gardant l'accent d’une autre langue.
-
-### YourTTS (co-développé avec Inria)
-- Clonage vocal multilingue zero-shot.
-- Basé sur VITS.
-- Open source.
 
 ## Google / DeepMind
 
@@ -212,18 +192,11 @@
 - Tacotron : spectrogrammes → WaveNet : audio.
 - Très haute qualité, bien maîtrisé.
 
-### SoundStorm (DeepMind, 2023)
+### SoundStorm 
 - Modèle non autoregressif, type "SoundStream-like".
 - Génère directement l'audio avec contrôle temporel.
 
-### StyleTTS & StyleTTS2
-- Contrôle explicite du style vocal (joyeux, sérieux...).
-- Zéro-shot speaker cloning.
-- Convient bien à la narration et au voice-over émotionnel.
 
-### AudioLM + SynthID
-- AudioLM : génération audio multi-étapes (tokens audio).
-- SynthID : watermarking invisible pour vérifier les voix synthétiques.
 
 ## Meta
 
@@ -315,22 +288,18 @@
 ---
 
 
-# LLMs Disponibles Actuellement (2024-2025)
+# LLMs (2024-2025)
 
 ## OpenAI
 
-### GPT-4 Turbo
+### GPT-4o (4o-mini)
 - **Accès** : API / ChatGPT Plus
 - **Contexte** : 128k tokens
 - **Multimodal** : Texte + image + voix
 - **Points forts** : Très bon raisonnement, stable, rapide
-- **Usage** : Chat, analyse, génération, agents IA
+- **Usage** : Chat, analyse, génération, agents IA, le mini fonctionne bien rapidement et consomme peu.
 
-### GPT-3.5 Turbo
-- **Accès** : API gratuite / ChatGPT Free
-- **Contexte** : 16k tokens
-- **Usage** : Chatbots, complétion rapide
-- **Note** : Moins bon que GPT-4 pour les tâches complexes
+
 
 ---
 
@@ -390,14 +359,7 @@
 
 ---
 
-## Cohere
 
-### Command R+
-- **Accès** : API via Cohere
-- **Spécialité** : RAG optimisé (Retrieval-Augmented Generation)
-- **Points forts** : Génération ancrée dans les documents
-
----
 
 ## Aleph Alpha (Allemagne)
 
@@ -512,21 +474,4 @@
 
 ---
 
-## Open Source / Recherche
-
-### Voicebox (Meta)
-- **Modèle multitâche vocal**, y compris :
-  - Reconstruction vocale,
-  - Continuité de parole,
-  - S2S multilingue.
-- **Statut** : recherche, pas encore open weight.
-
-### TTSFusion (Université de Tokyo)
-- **Approche** : joint STT-TTS training dans un modèle unique.
-- **Objectif** : voix naturelle, expressive, traduite.
-
-### OpenVoiSE (en développement)
-- Projet communautaire visant à créer un pipeline open source complet pour S2S.
-
----
 
