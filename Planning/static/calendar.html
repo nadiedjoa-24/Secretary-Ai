@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendrier</title>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #calendar {
+            max-width: 900px;
+            margin: 50px auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="calendar"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'fr',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: async function (info, successCallback, failureCallback) {
+                    try {
+                        const response = await fetch('/planning');
+                        const data = await response.json();
+                        const events = data.map(rdv => ({
+                            title: rdv.titre,
+                            start: rdv.date_heure,
+                            end: new Date(new Date(rdv.date_heure).getTime() + rdv.duree_minutes * 60000).toISOString(),
+                            description: rdv.description,
+                        }));
+                        successCallback(events);
+                    } catch (error) {
+                        console.error('Erreur lors du chargement des événements :', error);
+                        failureCallback(error);
+                    }
+                },
+                eventClick: function (info) {
+                    alert(`Titre : ${info.event.title}\nDescription : ${info.event.extendedProps.description}`);
+                }
+            });
+            calendar.render();
+        });
+    </script>
+</body>
+
+</html>

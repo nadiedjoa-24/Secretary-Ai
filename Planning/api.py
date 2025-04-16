@@ -6,6 +6,19 @@ from typing import List
 from pydantic import BaseModel
 from Planning import Planning, RendezVous, Personne
 import os
+import openai
+import requests
+from mistralai import Mistral
+
+# Configure ton API Key OpenAI
+openai.api_key = "TON_API_KEY"
+
+# Configure la clé API Mistral
+api_key = "RK4bZuH19jLw9nBgDtWX9nqeSMIHxrJW"  # Remplace par ta clé API Mistral
+model = "mistral-7b-chat"  # Modèle à utiliser (remplace par le modèle approprié)
+
+# Initialiser le client Mistral
+client = Mistral(api_key=api_key)
 
 app = FastAPI()
 
@@ -108,3 +121,24 @@ def demande_rdv(client_data: dict):
 def serve_html():
     with open("index.html", "r", encoding="utf-8") as file:
         return HTMLResponse(content=file.read())
+
+@app.get("/calendar", response_class=HTMLResponse)
+def serve_calendar():
+    with open("static/calendar.html", "r", encoding="utf-8") as file:
+        return HTMLResponse(content=file.read())
+
+@app.post("/chat")
+def chat_with_mistral(message: str):
+    try:
+        # Appeler l'API Mistral via la bibliothèque mistralai
+        response = client.chat.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": "Tu es un assistant qui aide à gérer les créneaux de rendez-vous."},
+                {"role": "user", "content": message},
+            ],
+        )
+        # Retourner la réponse de l'assistant
+        return {"response": response["choices"][0]["message"]["content"]}
+    except Exception as e:
+        return {"error": f"Erreur lors de l'appel à l'API Mistral : {str(e)}"}

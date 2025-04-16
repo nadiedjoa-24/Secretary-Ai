@@ -15,6 +15,13 @@
     <h2>Créneaux Disponibles</h2>
     <ul id="creneaux-list"></ul>
 
+    <h2>Chat avec l'Assistant</h2>
+    <div id="chatbox">
+        <div id="messages" style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll;"></div>
+        <input type="text" id="user-input" placeholder="Écrivez votre message..." style="width: 80%;">
+        <button id="send-button">Envoyer</button>
+    </div>
+
     <script>
         async function fetchPlanning() {
             const response = await fetch("http://127.0.0.1:8000/planning");
@@ -47,6 +54,54 @@
                 ul.appendChild(li);
             });
         }
+
+        const messagesDiv = document.getElementById("messages");
+        const userInput = document.getElementById("user-input");
+        const sendButton = document.getElementById("send-button");
+
+        async function sendMessage() {
+            const userMessage = userInput.value;
+            if (!userMessage) return;
+
+            // Afficher le message de l'utilisateur
+            const userMessageDiv = document.createElement("div");
+            userMessageDiv.textContent = `Vous : ${userMessage}`;
+            messagesDiv.appendChild(userMessageDiv);
+
+            // Appeler l'API FastAPI pour interagir avec OpenAI
+            try {
+                const response = await fetch("http://127.0.0.1:8000/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ message: userMessage }),
+                });
+                const data = await response.json();
+
+                // Afficher la réponse de l'assistant
+                const assistantMessageDiv = document.createElement("div");
+                if (data.response) {
+                    assistantMessageDiv.textContent = `Assistant : ${data.response}`;
+                } else {
+                    assistantMessageDiv.textContent = "Erreur : Impossible de contacter l'assistant.";
+                }
+                messagesDiv.appendChild(assistantMessageDiv);
+            } catch (error) {
+                const errorDiv = document.createElement("div");
+                errorDiv.textContent = "Erreur : " + error.message;
+                messagesDiv.appendChild(errorDiv);
+            }
+
+            // Nettoyer le champ de saisie
+            userInput.value = "";
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll vers le bas
+        }
+
+        sendButton.addEventListener("click", sendMessage);
+        userInput.addEventListener("keypress", function (e) {
+            if (e.key === "Enter") sendMessage();
+        });
 
         // Charger les données au chargement de la page
         fetchPlanning();
