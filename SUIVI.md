@@ -23,8 +23,9 @@
   - **Analyse** : Mauvais choix d'interlocuteur - une secrétaire pourrait percevoir notre projet comme une menace pour son emploi alors qu'il vise à l'aider en automatisant les tâches répétitives
 
 ## Mardi 4 mars 2025
--(Yannick): Création d'un planning pour les rdv avec des données spécifiées
-
+-(Yanic): Création d'un planning pour les rdv avec des données spécifiées
+-(Yanic & Agshay): Création d'un AI_Agent qui donne des ordonnances.
+-(Yifan&Théophile):Début de la mise en place de Speech-to-text 
 ## Mardi 18 mars 2025
 -(Yifan) : implémentation de LLaMA sur GPU
 -(Antoine):  Création d'un premier modèle text-to-speech en utilisant pyttsx3 ou gtts 
@@ -32,15 +33,25 @@
 ## Mardi 25 mars 2025
 -(Yifan) : implémentation de Whispers pour la voix de l'IA
 
+## Mardi 1 Avril 2025
+-(Yifan):
+-()
+
 ## Mardi 8 avril 2025
 -(Théophile) : Implémentation d'un programme text_to_speech avec plusieurs voix avec Whispers
 -(Théophile) : Test programme text_to_speech avec evenlabs
 -(Yifan) :  Mise en place de Mistral pour répondre aux clients
 -(Agshay) : test de speech_to_text sur GPU avec Mistral et Whispers
-
+-(Yanic): Mise en place d'un script permettant de mettre en serveur un bot AI sur le gpu à distance.
 ## Mardi 15 avril 2025
 -(Yifan) :  Planning 
 -(Théophile) : 
 -(Agshay) : Merge des 2 branches (master/main) + Résolution conflits + arrangement du Git
 -(Antoine):
 -**Yanic
+##Mercredi 16 avril 2025 
+-(Yifan): 
+-(Théophile):
+-(Agshay):
+-(Yanic):
+-(Antoine):
