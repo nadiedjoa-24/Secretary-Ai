@@ -65,3 +65,9 @@
 - (Agshay) : Test utilisateur 
 - (Yanic) : Rédaction de l'état de l'art pour tout ce qui est en rapport avec les voix, whispers et tout.
 - (Antoine) : Création d’un support de communication pour la suite
+## Lundi 5 Mai 2025 
+- (Yifan) : Boite mail, bot qui répond aux mails. 
+- (Yifan,Théophile,Agshay, Yanic et Antoine): Discussion sur les enjeux sociaux et/ou environnementaux
+-
+
+##Lundi 12 Mai 2025
