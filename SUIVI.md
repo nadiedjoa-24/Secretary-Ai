@@ -70,6 +70,6 @@
 - (Yifan,Théophile, Agshay, Yanic et Antoine): Discussion sur les enjeux sociaux et/ou environnementaux
 - (Théophile, Antoine) : comparaison des performances en local sur GPU vs en global avec l'API d'openAI
 
-##Lundi 12 Mai 2025
+## Lundi 12 Mai 2025
 - (Yifan, Yanic, Antoine, Agshay, Théophile) : élaboration et rédaction du rapport sur les enjeux sociaux et/ou environnementaux 
 - (Yifan, Yanic, Antoine, Agshay, Théophile) : discussion, état des lieux et attributon des tâches à finaliser avant la démo du 19 mai
