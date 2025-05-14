@@ -63,13 +63,13 @@
 - (Yifan) : Configuration finale de l’environnement distant + tests de latence
 - (Théophile) :documentation technique pour la partie vocale
 - (Agshay) : Test utilisateur 
-- (Yanic) : Rédaction de l'état de l'art pour tout ce qui est en rapport avec les voix, whispers et tout.
+- (Yanic) : Rédaction de l'état de l'art pour tout ce qui est en rapport avec les voix, whispers et tout
 - (Antoine) : Création d’un support de communication pour la suite
 ## Lundi 5 Mai 2025 
-- (Yifan) : Boite mail, bot qui répond aux mails. 
-- (Yifan,Théophile,Agshay, Yanic et Antoine): Discussion sur les enjeux sociaux et/ou environnementaux
--
+- (Yifan) : Boite mail, bot qui répond aux mails
+- (Yifan,Théophile, Agshay, Yanic et Antoine): Discussion sur les enjeux sociaux et/ou environnementaux
+- (Théophile, Antoine) : comparaison des performances en local sur GPU vs en global avec l'API d'openAI
 
 ##Lundi 12 Mai 2025
--
--
+- (Yifan, Yanic, Antoine, Agshay, Théophile) : élaboration et rédaction du rapport sur les enjeux sociaux et/ou environnementaux 
+- (Yifan, Yanic, Antoine, Agshay, Théophile) : discussion, état des lieux et attributon des tâches à finaliser avant la démo du 19 mai
