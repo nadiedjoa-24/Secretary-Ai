@@ -2,30 +2,66 @@ import whisper
 import os
 import tempfile
 from gtts import gTTS
-import playsound
-import argparse
+import subprocess
 from openai import OpenAI
 
-# ========== CONFIGURATION ENVIRONNEMENT ========== 
-os.environ["FFMPEG_BINARY"] = r"C:\Users\theop\Documents\Telecom_Paris\Artishow\git_secretary_ai\git_clone\ffmpeg\bin\ffmpeg.exe"
+# ========== AJOUT AU PATH POUR FFMPEG ==========
+ffmpeg_dir = r"C:\Users\theop\Documents\Telecom_Paris\Artishow\git_artishow\secretaryai\ffmpeg\bin"
+os.environ["PATH"] += os.pathsep + ffmpeg_dir
+ffmpeg_exe = os.path.join(ffmpeg_dir, "ffmpeg.exe")
+ffplay_exe = os.path.join(ffmpeg_dir, "ffplay.exe")
 
-# ========== CONFIGURATION GROQ ========== 
+# ========== CONFIGURATION GROQ ==========
 groq_client = OpenAI(
     api_key="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",
     base_url="https://api.groq.com/openai/v1"
 )
 
-# ========== CHEMIN D'ACCÈS AU FICHIER AUDIO PAR DÉFAUT ==========
-default_audio_file = "C:/Users/theop/Documents/Telecom_Paris/Artishow/git_secretary_ai/git_clone/bonjour_destination_juillet.mp3"
+# ✅ Fichier à traiter
+default_audio_file = "C:/Users/theop/Documents/Telecom_Paris/Artishow/git_artishow/secretaryai/bonjour_destination_juillet.mp3"
 
-# ========== ÉTAPE 1 : Transcription locale ==========
+# ========== PATCH DE whisper.audio.load_audio ==========
+import whisper.audio as wa
+from whisper.audio import N_SAMPLES, SAMPLE_RATE
+import numpy as np
+import io
+import torch
+
+def load_audio_custom(file: str, sr: int = SAMPLE_RATE):
+    cmd = [
+        ffmpeg_exe,
+        "-nostdin",
+        "-threads", "0",
+        "-i", file,
+        "-f", "s16le",
+        "-ac", "1",
+        "-acodec", "pcm_s16le",
+        "-ar", str(sr),
+        "-"
+    ]
+    out = subprocess.run(cmd, capture_output=True, check=True).stdout
+    audio = np.frombuffer(out, np.int16).flatten().astype(np.float32) / 32768.0
+    if audio.shape[0] < N_SAMPLES:
+        audio = np.pad(audio, (0, N_SAMPLES - audio.shape[0]))
+    else:
+        audio = audio[:N_SAMPLES]
+    return audio
+
+wa.load_audio = load_audio_custom
+
+# ========== TRANSCRIPTION ==========
 def transcribe_audio_local(file_path):
     print("📝 Transcription locale avec Whisper...")
+
+    if not os.path.isfile(file_path):
+        raise FileNotFoundError(f"❌ Fichier audio introuvable : {file_path}")
+    print(f"✅ Fichier trouvé : {file_path}")
+
     model = whisper.load_model("base")
     result = model.transcribe(file_path, language="fr")
     return result["text"]
 
-# ========== ÉTAPE 2 : Traitement par l'IA ==========
+# ========== TRAITEMENT IA ==========
 def process_with_ai(question):
     print("🧠 Traitement de la question avec Groq...")
     response = groq_client.chat.completions.create(
@@ -37,40 +73,26 @@ def process_with_ai(question):
     )
     return response.choices[0].message.content
 
-# ========== ÉTAPE 3 : Lecture vocale ==========
+# ========== SYNTHÈSE VOCALE ==========
 def speak(text):
-    from gtts import gTTS
-    import tempfile
-    import subprocess
-
     tts = gTTS(text=text, lang="fr")
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio:
         temp_audio_path = temp_audio.name
         tts.save(temp_audio_path)
 
     print("🗣️ Réponse vocale en cours...")
-
-    # 🔊 Lecture avec ffplay
-    ffplay_path = r"C:\Users\theop\Documents\Telecom_Paris\Artishow\git_secretary_ai\git_clone\ffmpeg\bin\ffplay.exe"
     try:
-        subprocess.run([ffplay_path, "-nodisp", "-autoexit", temp_audio_path], check=True)
+        subprocess.run([ffplay_exe, "-nodisp", "-autoexit", temp_audio_path], check=True)
     finally:
         os.remove(temp_audio_path)
-
 
 # ========== MAIN ==========
 def main(audio_file):
     print("🎧 Traitement du fichier :", audio_file)
-
-    # 1. Transcrire l'audio
     question = transcribe_audio_local(audio_file)
     print("🧾 Texte reconnu :", question)
-
-    # 2. Répondre à la question avec Groq
     answer = process_with_ai(question)
     print("🤖 Réponse :", answer)
-
-    # 3. Lire la réponse à haute voix
     speak(answer)
 
 if __name__ == "__main__":
