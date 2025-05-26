@@ -6,23 +6,53 @@ import subprocess
 import speech_recognition as sr
 from openai import OpenAI
 
-# ========== CONFIGURATION ENVIRONNEMENT ========== 
-os.environ["FFMPEG_BINARY"] = r"C:\Users\theop\Documents\Telecom_Paris\Artishow\git_secretary_ai\git_clone\ffmpeg\bin\ffmpeg.exe"
+# ========== CONFIGURATION FFMPEG ==========
+ffmpeg_dir = r"C:\Users\theop\Documents\Telecom_Paris\Artishow\git_artishow\secretaryai\ffmpeg\bin"
+os.environ["PATH"] += os.pathsep + ffmpeg_dir
+ffmpeg_exe = os.path.join(ffmpeg_dir, "ffmpeg.exe")
+ffplay_exe = os.path.join(ffmpeg_dir, "ffplay.exe")
 
-# ========== CONFIGURATION GROQ ========== 
+# ========== PATCH DE WHISPER POUR FFMPEG ==========
+import whisper.audio as wa
+from whisper.audio import N_SAMPLES, SAMPLE_RATE
+import numpy as np
+
+def load_audio_custom(file: str, sr: int = SAMPLE_RATE):
+    cmd = [
+        ffmpeg_exe,
+        "-nostdin",
+        "-threads", "0",
+        "-i", file,
+        "-f", "s16le",
+        "-ac", "1",
+        "-acodec", "pcm_s16le",
+        "-ar", str(sr),
+        "-"
+    ]
+    out = subprocess.run(cmd, capture_output=True, check=True).stdout
+    audio = np.frombuffer(out, np.int16).flatten().astype(np.float32) / 32768.0
+    if audio.shape[0] < N_SAMPLES:
+        audio = np.pad(audio, (0, N_SAMPLES - audio.shape[0]))
+    else:
+        audio = audio[:N_SAMPLES]
+    return audio
+
+wa.load_audio = load_audio_custom
+
+# ========== CONFIGURATION GROQ ==========
 groq_client = OpenAI(
     api_key="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",
     base_url="https://api.groq.com/openai/v1"
 )
 
-# ========== FONCTION : Transcription via Whisper local ========== 
+# ========== FONCTION : Transcription via Whisper local ==========
 def transcribe_audio_local(file_path):
     print("📝 Transcription locale avec Whisper...")
     model = whisper.load_model("base")
     result = model.transcribe(file_path, language="fr")
     return result["text"]
 
-# ========== FONCTION : Traitement IA ========== 
+# ========== FONCTION : Traitement IA ==========
 def process_with_ai(question):
     print("🧠 Traitement de la question avec Groq...")
     response = groq_client.chat.completions.create(
@@ -34,7 +64,7 @@ def process_with_ai(question):
     )
     return response.choices[0].message.content
 
-# ========== FONCTION : Parler avec gTTS ========== 
+# ========== FONCTION : Parler avec gTTS ==========
 def speak(text):
     tts = gTTS(text=text, lang="fr")
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio:
@@ -43,21 +73,18 @@ def speak(text):
 
     print("🗣️ Réponse vocale en cours (vitesse augmentée)...")
 
-    ffplay_path = r"C:\Users\theop\Documents\Telecom_Paris\Artishow\git_secretary_ai\git_clone\ffmpeg\bin\ffplay.exe"
     try:
-        # Ajouter un filtre audio pour augmenter la vitesse (atempo = 1.0 est normal)
         subprocess.run([
-            ffplay_path,
+            ffplay_exe,
             "-nodisp",
             "-autoexit",
-            "-af", "atempo=1.35",  # ↖️ ici tu peux régler la vitesse (1.0 = normal)
+            "-af", "atempo=1.35",
             temp_audio_path
         ], check=True)
     finally:
         os.remove(temp_audio_path)
 
-
-# ========== FONCTION : Enregistrer l'audio du micro ========== 
+# ========== FONCTION : Enregistrer l'audio du micro ==========
 def record_audio():
     print("🎙️ Parle maintenant (enregistrement en cours)...")
     recognizer = sr.Recognizer()
@@ -72,7 +99,7 @@ def record_audio():
             f.write(audio.get_wav_data())
     return temp_audio_path
 
-# ========== MAIN INTERACTIF ========== 
+# ========== MAIN INTERACTIF ==========
 def main_loop():
     while True:
         try:
