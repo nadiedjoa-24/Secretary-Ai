@@ -73,11 +73,20 @@
 ## Lundi 12 Mai 2025
 - (Yifan, Yanic, Antoine, Agshay, Théophile) : élaboration et rédaction du rapport sur les enjeux sociaux et/ou environnementaux 
 - (Yifan, Yanic, Antoine, Agshay, Théophile) : discussion, état des lieux et attributon des tâches à finaliser avant la démo du 19 mai
-## Lundi 17 Mai 2025
+## Lundi 19 Mai 2025
 -(Yanic) : Agent mail qui trie les mails dans différents dossiers selon le contenu du Mail
 -(Yifan) : Même agent mail qui résumé rapidement le contenu d'un Mail.
 -(Agshay) : Agent Ordonnance qui a été optimisé : Produit des ordonnances par la voix.
 -(Antoine et Théophile) : Finetuning de la voix. 
-##Lundi 19 Mai 2025 
 -(Tous les membres) On a présenté notre projet et on a pu discuter avec l'auditoire. 
 -(Yifan et Yanic) : Implémentation sur les GPU mais ça bug. 
+##Lundi 26 mai 2025
+-(Tous) : Discussion avec l'encadrant
+-(Antoine) : Elaboration de la page spéciale mail
+-(Agshay) : Elaboration de la page spéciale ordonnances
+-(Yanic) : Redéfinition de la méthode utilisée pour l'ordonnance, + optimisation du planning
+-(Théophile) : Finetuning de la voix 
+-(Yifan) : Mise en place d'un site web pour le projet
+##Lundi 2 Juin 2025
+
+##Lundi 9 Juin 2025
