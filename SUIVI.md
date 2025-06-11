@@ -81,12 +81,12 @@
 -(Tous les membres) On a présenté notre projet et on a pu discuter avec l'auditoire. 
 -(Yifan et Yanic) : Implémentation sur les GPU mais ça bug. 
 ##Lundi 26 mai 2025
--(Tous) : Discussion avec l'encadrant
--(Antoine) : Elaboration de la page spéciale mail
--(Agshay) : Elaboration de la page spéciale ordonnances
--(Yanic) : Redéfinition de la méthode utilisée pour l'ordonnance, + optimisation du planning
--(Théophile) : Finetuning de la voix 
--(Yifan) : Mise en place d'un site web pour le projet
+-(Tous) : Discussion avec l'encadrant  
+-(Antoine) : Elaboration de la page spéciale mail  
+-(Agshay) : Elaboration de la page spéciale ordonnances  
+-(Yanic) : Redéfinition de la méthode utilisée pour l'ordonnance, + optimisation du planning  
+-(Théophile) : Finetuning de la voix   
+-(Yifan) : Mise en place d'un site web pour le projet  
 ##Lundi 2 Juin 2025
 
 ##Lundi 9 Juin 2025
