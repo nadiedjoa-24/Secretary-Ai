@@ -16,6 +16,9 @@ from dotenv import load_dotenv
 import pygame
 
 
+tools = {
+    "fonction1" 
+}
 
 env_path = Path(__file__).resolve().parents[1] / ".env"
 load_dotenv(dotenv_path=env_path)

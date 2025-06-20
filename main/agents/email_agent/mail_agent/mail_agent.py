@@ -1,8 +1,9 @@
 import os
 from mail_handler.mail_handler import MAIL_HANDLER
+from common.ai.API_client import API_Client
+from common.ai.model.BaseAIModel import Message
 import openai
 from typing import Literal
-from transformers import pipeline
 
 
 
@@ -16,7 +17,7 @@ class Mail_Agent:
         else:
             self.M = MAIL_HANDLER()
 
-        self.model = None
+        self.client = None
 
 
     def _init_backend(self):
@@ -28,7 +29,7 @@ class Mail_Agent:
                 raise ValueError("API_KEY is required for API backend")
             openai.api_key = self.API_KEY
             try:
-                self.model = openai.OpenAI(api_key=self.API_KEY)
+                self.client = API_Client(APi_KEY = self.API_KEY)
             except Exception as e:
                 raise ValueError(f"Failed to initialize API backend: {e}")
 
@@ -45,6 +46,11 @@ class Mail_Agent:
         """
         Summarize a single email's content.
         """
+        prompt = f"You are an helpful assistant that gives a relevant summary of the following text. The summary has to be short and should containt the key elements. This is the text you have to sum up : {content}."
+        msg: Message = Message(role="assistant", content=prompt)
+        response = self.client.basic([msg]).content
+        return response
+
     
     def summarize_mailbox(self) -> dict:
         """
@@ -52,7 +58,15 @@ class Mail_Agent:
         """
 
 
+
     def classify_email(self, content) -> str:
         """
         Classify the content of an email.
         """
+
+
+
+# Test example 
+
+if __name__ == "__main__":
+    mail_agent = Mail_Agent()

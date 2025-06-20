@@ -78,14 +78,15 @@ class MAIL_HANDLER:
             print(f"Erreur de déconnexion de la boîte mail : {e}")
 
 
-    def get_unread_emails(self):
+    def get_unread_emails(self) -> List[eMail]:
         """
         Open inbox folder and retrieve all unread emails as eMail objects.
         """
+        unread_emails = []
         self._connect()
         self.mail.select("INBOX")
         status, messages = self.mail.search(None, 'UNSEEN')
-
+        print(f"test: {messages[0]}")
         if status != "OK":
             print("Erreur lors de la récupération des emails.")
             return
@@ -120,7 +121,6 @@ class MAIL_HANDLER:
                     charset = msg.get_content_charset() or "utf-8"
                     content = payload.decode(charset, errors="ignore") if payload else ""
 
-                # Create and store eMail instance
                 email_obj = eMail(
                     id=e_id.decode(),
                     content=content,
@@ -128,7 +128,9 @@ class MAIL_HANDLER:
                     sender=sender,
                     date=date
                 )
-                self.mails.append(email_obj)
+                unread_emails.append(email_obj)
+
+        return unread_emails
 
 
     def move_email(self, email_id, target_folder):

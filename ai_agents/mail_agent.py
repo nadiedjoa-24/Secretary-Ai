@@ -24,7 +24,6 @@ class Mail_Agent:
 
     def __init__(self):
         self.client = openai.OpenAI(api_key = self.API_KEY)
-        self.mails = []
         # Récupère les identifiants depuis l'environnement
         email = os.getenv("EMAIL")
         password = os.getenv("PASSWORD")
@@ -37,6 +36,7 @@ class Mail_Agent:
 
     def get_unread_emails(self):
         """Ouvre la boîte mail et récupère tous les emails non lus."""
+        unread_emails = []
         self.mail.select("INBOX") 
         status, messages = self.mail.search(None, 'UNSEEN') 
 
