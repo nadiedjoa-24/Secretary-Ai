@@ -29,11 +29,12 @@ class PatientInfo(BaseModel):
 
 class OrdoAgent:
     def __init__(self):
+        self.API_KEY = os.getenv("API_KEY")
         self.client = API_Client()
         self.audio_ctrl = AUDIO_Controller(device_index=1)  # Ou mets None si tu ne spécifies pas de micro
         self.medecin_info = "Dr Jean Martin"
         
-        self.API_KEY = os.getenv("API_KEY")
+       
 
     def parler(self, texte: str):
         print(f"🗣️ {texte}")
