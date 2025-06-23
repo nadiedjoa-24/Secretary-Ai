@@ -87,16 +87,20 @@ class Mail_Agent:
         return response
     
     
-    def classify_mailbox(self) -> List:
+    def classify_mailbox(self) -> List[str]:
         """
-        Classify unseen emails and assign them to folders.
+        Classify unseen emails and move them to folders.
         """
         unseen_emails: List[eMail] = self.M.get_unread_emails()
-        classifications: List[str] = []
+        moved_folders: List[str] = []
         for email in unseen_emails:
-            classification = self.classify_email(email)
-            classifications.append(classification)
-        return classifications
+            target_folder = self.classify_email(email)
+            try:
+                self.M.move_email(email.id, target_folder)
+            except Exception as e:
+                raise RuntimeError(f"Failed to move email {email.id} to folder '{target_folder}': {e}")
+            moved_folders.append(target_folder)
+        return moved_folders
     
 
     def respond_to_email(self, email: eMail) -> str:
