@@ -1,12 +1,126 @@
 {
     "1": {
         "1": {
-            "Smith": [],
-            "Johnson": []
+            "Smith": [
+                {
+                    "name": "Alice",
+                    "surname": "Smith",
+                    "date": "2025-01-01",
+                    "mail": "alice@example.com",
+                    "phone": "555-0001",
+                    "description": "Checkup",
+                    "doctor": "Smith",
+                    "duration_seconds": 2700,
+                    "start_time": "10:00:00"
+                },
+                {
+                    "name": "Bob",
+                    "surname": "Brown",
+                    "date": "2025-01-01",
+                    "mail": "bob@example.com",
+                    "phone": "555-0002",
+                    "description": "Consultation",
+                    "doctor": "Smith",
+                    "duration_seconds": 1800,
+                    "start_time": "11:00:00"
+                },
+                {
+                    "name": "Carol",
+                    "surname": "Davis",
+                    "date": "2025-01-01",
+                    "mail": "carol@example.com",
+                    "phone": "555-0003",
+                    "description": "Follow-up",
+                    "doctor": "Smith",
+                    "duration_seconds": 1800,
+                    "start_time": "12:00:00"
+                }
+            ],
+            "Johnson": [
+                {
+                    "name": "David",
+                    "surname": "Taylor",
+                    "date": "2025-01-01",
+                    "mail": "david@example.com",
+                    "phone": "555-0004",
+                    "description": "Checkup",
+                    "doctor": "Johnson",
+                    "duration_seconds": 1800,
+                    "start_time": "09:30:00"
+                },
+                {
+                    "name": "Eva",
+                    "surname": "Anderson",
+                    "date": "2025-01-01",
+                    "mail": "eva@example.com",
+                    "phone": "555-0005",
+                    "description": "Consultation",
+                    "doctor": "Johnson",
+                    "duration_seconds": 3600,
+                    "start_time": "14:00:00"
+                }
+            ]
         },
         "2": {
-            "Smith": [],
-            "Johnson": []
+            "Smith": [
+                {
+                    "name": "Frank",
+                    "surname": "Green",
+                    "date": "2025-01-02",
+                    "mail": "frank@example.com",
+                    "phone": "555-0006",
+                    "description": "Consultation",
+                    "doctor": "Smith",
+                    "duration_seconds": 1800,
+                    "start_time": "09:00:00"
+                },
+                {
+                    "name": "Grace",
+                    "surname": "Hill",
+                    "date": "2025-01-02",
+                    "mail": "grace@example.com",
+                    "phone": "555-0007",
+                    "description": "Checkup",
+                    "doctor": "Smith",
+                    "duration_seconds": 3600,
+                    "start_time": "11:00:00"
+                },
+                {
+                    "name": "Hank",
+                    "surname": "Irving",
+                    "date": "2025-01-02",
+                    "mail": "hank@example.com",
+                    "phone": "555-0008",
+                    "description": "Follow-up",
+                    "doctor": "Smith",
+                    "duration_seconds": 2700,
+                    "start_time": "15:00:00"
+                }
+            ],
+            "Johnson": [
+                {
+                    "name": "Ivy",
+                    "surname": "King",
+                    "date": "2025-01-02",
+                    "mail": "ivy@example.com",
+                    "phone": "555-0009",
+                    "description": "Consultation",
+                    "doctor": "Johnson",
+                    "duration_seconds": 2700,
+                    "start_time": "09:00:00"
+                },
+                {
+                    "name": "Jack",
+                    "surname": "Lee",
+                    "date": "2025-01-02",
+                    "mail": "jack@example.com",
+                    "phone": "555-0010",
+                    "description": "Checkup",
+                    "doctor": "Johnson",
+                    "duration_seconds": 1800,
+                    "start_time": "16:00:00"
+                }
+            ]
         },
         "3": {
             "Smith": [],

@@ -164,7 +164,7 @@ if __name__ == "__main__":
 
     # Test TTS avec AUDIO_Controller
     print("\n=== Test TTS via AUDIO_Controller ===")
-    tts_path = client.tts("Ceci est un test de synthèse vocale.")
+    tts_path = client.tts("Dans le silence doré du matin, un vieux vélo rouillé reposait contre le mur couvert de lierre. Le chant discret d’un merle s’élevait, se mêlant au parfum sucré des fleurs de tilleul. Quelqu’un, quelque part, laissait flotter une mélodie à la guitare, légère comme un souffle de vent.")
     print(f"tts path : {tts_path}")
     audio_ctrl.play(tts_path)
     print(f"TTS généré et joué depuis : {tts_path}")

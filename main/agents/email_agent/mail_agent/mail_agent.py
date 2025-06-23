@@ -162,16 +162,16 @@ if __name__ == "__main__":
     except Exception as e:
         print("Error classifying mailbox:", e)
 
-    print("\n=== Send Test Email ===")
-    try:
-        mail_agent.send_email(
-            recipient="yanic.rothlingshofer@gmail.com",
-            subject="Test Email",
-            content="This is a test email sent by Mail_Agent."
-        )
-        print("Test email sent successfully.")
-    except Exception as e:
-        print("Error sending test email:", e)
+    # print("\n=== Send Test Email ===")
+    # try:
+    #     mail_agent.send_email(
+    #         recipient="yanic.rothlingshofer@gmail.com",
+    #         subject="Test Email",
+    #         content="This is a test email sent by Mail_Agent."
+    #     )
+    #     print("Test email sent successfully.")
+    # except Exception as e:
+    #     print("Error sending test email:", e)
 
 
     
