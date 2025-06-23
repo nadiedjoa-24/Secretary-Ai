@@ -52,15 +52,29 @@ def rearrange():
         return render_template('rearrange.html', emails=unseen_emails, folders=folders, message=message)
     return render_template('rearrange.html', emails=unseen_emails, folders=folders)
 
-@app.route('/auto_sort', methods=['POST'])
+@app.route('/summarize/auto_sort', methods=['POST'])
 def auto_sort():
     classifications = mail_agent.classify_mailbox()
-    # On suppose que classify_mailbox déplace ou classe les mails, sinon tu peux ajouter le déplacement ici
+    # Création d'une liste de messages pour chaque mail déplacé
     if classifications:
-        message = "Tri automatique effectué !"
+        messages = [f"Mail déplacé avec succès dans : {folder}" for folder in classifications]
     else:
-        message = "Aucun mail à trier."
-    return render_template('auto_sort.html', classifications=classifications, message=message)
+        messages = ["Aucun mail à trier."]
+    # Recharge la page des résumés
+    unseen_emails = mail_agent.M.get_unread_emails()
+    folders = mail_agent.M.get_folders()
+    mails = []
+    for email in unseen_emails:
+        date = getattr(email, "date", "Date inconnue")
+        summary = mail_agent.summarize_email(email)
+        if not summary or summary.strip() == "":
+            summary = "Ce message ne peut pas être résumé."
+        mails.append({
+            "id": email.id,
+            "date": date,
+            "summary": summary
+        })
+    return render_template('summaries.html', mails=mails, folders=folders, messages=messages)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -96,9 +96,6 @@
     <form action="{{ url_for('summarize') }}" method="get" onsubmit="showLoader()">
         <button type="submit" class="refresh-btn">Rafraîchir les résumés</button>
     </form>
-    <form action="{{ url_for('auto_sort') }}" method="post" style="display:inline;">
-        <button type="submit" class="refresh-btn" style="background:#00bfae;">Tri automatique</button>
-    </form>
     <div id="loader" class="loader"></div>
     <div class="center">
         {% if message %}
@@ -123,8 +120,25 @@
             </li>
             {% endfor %}
         </ul>
+        <!-- Bouton Tri automatique placé après la liste -->
+        <form action="{{ url_for('auto_sort') }}" method="post" style="margin-top:30px; text-align:center;">
+            <button type="submit" class="refresh-btn" style="background:#00bfae;">Tri automatique</button>
+        </form>
+        {% if classifications %}
+        <ul>
+            {% for folder in classifications %}
+            <li>Le message a été classé dans : <b>{{ folder }}</b></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         {% else %}
         <p>Vous êtes bien à jour</p>
+        {% endif %}
+        <!-- Ajoute ceci là où tu affiches les messages -->
+        {% if messages %}
+        {% for msg in messages %}
+        <p style="color:green;">{{ msg }}</p>
+        {% endfor %}
         {% endif %}
     </div>
 </body>
