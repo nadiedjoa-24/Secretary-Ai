@@ -18,6 +18,7 @@ class Mail_Agent:
     
     def __init__(self, EMAIL: str = None, PASSWORD: str = None, backend: Literal["API", "LOCAL"] = "API", API_KEY: str = None):
         self.API_KEY = API_KEY
+        
         self.backend = backend
         if EMAIL is not None and PASSWORD is not None:
             self.M = MAIL_HANDLER(EMAIL, PASSWORD)
@@ -25,24 +26,28 @@ class Mail_Agent:
             self.M = MAIL_HANDLER()
 
         self.client = None
+        self._init_backend()
 
 
     def _init_backend(self):
 
         # API mode (we use OpenAI's API but it can be extended to other APIs)
         if self.backend == "API":
-            self.API_KEY = os.getenv("API_KEY")
             if not self.API_KEY:
-                raise ValueError("API_KEY is required for API backend")
-            openai.api_key = self.API_KEY
+                try:
+                    self.API_KEY = os.getenv("API_KEY")
+                except KeyError as e:
+                    raise ValueError(f"API_KEY is required for API backend, please provide one at instantiation or in environment: {e}")
+            else:
+                openai.api_key = self.API_KEY
+                # print(f" == API_KEY : {self.API_KEY} ")
             try:
-                self.client = API_Client(APi_KEY = self.API_KEY)
+                self.client = API_Client(API_KEY = self.API_KEY)
             except Exception as e:
                 raise ValueError(f"Failed to initialize API backend: {e}")
 
         # LOCAL mode (we use Huggingface's transformers package for local models)
         elif self.backend == "LOCAL":
-            
             pass
 
         else:
@@ -138,7 +143,8 @@ class Mail_Agent:
 # Test example 
 
 if __name__ == "__main__":
-    mail_agent = Mail_Agent()
+    mail_agent = Mail_Agent(API_KEY = "***REMOVED-OPENAI-KEY-1***")
+
     print("== Test de résumé d'une MAILBOX ==")
     summaries = mail_agent.summarize_mailbox()
     for idx, summary in enumerate(summaries, 1):

@@ -71,13 +71,14 @@ class API_Client(BaseAIModel):
             raise ValueError("No reponse from the API.")
 
 
-    def tts(self, text: str, output_path: str = "output.mp3") -> str:
+    def tts(self, text: str, filename: str = "output.mp3") -> str:
 
-        instr = ""
+        output_path = "./audio_recordings/" + filename
+        instr = "Speak in a neutral tone, you are a secretary assistant and must be professional."
 
         response = self.client.audio.speech.with_raw_response.create(
             model = "gpt-4o-mini-tts",
-            voice = "coral",
+            voice = "alloy",
             input = text,
             instructions = instr
         )
@@ -85,7 +86,7 @@ class API_Client(BaseAIModel):
             with open(output_path, "wb") as f:
                 f.write(response.content)
             
-            return output_path
+            return filename
         else:
             raise ValueError("No response from the API.")
 
@@ -114,19 +115,19 @@ if __name__ == "__main__":
     client = API_Client()
     audio_ctrl = AUDIO_Controller(device_index=1)
 
-    # Test basic()
-    print("=== Test basic() ===")
-    basic_msg = client.basic([Message(role="user", content="Bonjour, comment ça va ?")])
-    print(basic_msg.content)
+    # # Test basic()
+    # print("=== Test basic() ===")
+    # basic_msg = client.basic([Message(role="user", content="Bonjour, comment ça va ?")])
+    # print(basic_msg.content)
 
     # # Test reflexion()
     # print("\n=== Test reflexion() ===")
     # reflex_msg = client.reflexion([Message(role="user", content="Explique-moi la loi de Murphy.")])
     # print(reflex_msg.content)
 
-    print("\n=== Test parse() ===")
-    parsed = client.parse([{"role": "user", "content": "Que vaut 6 + 3"}], Message)
-    print(parsed)
+    # print("\n=== Test parse() ===")
+    # parsed = client.parse([{"role": "user", "content": "Que vaut 6 + 3"}], Message)
+    # print(parsed)
 
     # Test TTS avec AUDIO_Controller
     print("\n=== Test TTS via AUDIO_Controller ===")
@@ -140,3 +141,30 @@ if __name__ == "__main__":
     audio_path = audio_ctrl.listen()
     stt_msg = client.stt(audio_path)
     print(f"Transcription: {stt_msg.content}")
+
+
+    # Conversation continue : dit "exit" pour quitter
+    print("\n=== Conversation continue (dit 'exit' pour quitter) ===")
+    try:
+        while True:
+            print("Veuillez poser une question après le bip...")
+            conv_audio = audio_ctrl.listen()
+            conv_input = client.stt(conv_audio)
+            content = conv_input.content.strip().lower()
+            if content in ("exit", "quit", "stop"):
+                print("Fin de la conversation.")
+                break
+
+            # Générer réponse AI
+            ai_response = client.basic([Message(role="user", content=conv_input.content)])
+            print(f"Réponse AI : {ai_response.content}")
+
+            # Synthèse vocale et lecture
+            response_tts_path = client.tts(ai_response.content, output_path="response_tts.mp3")
+            print(f"Fichier TTS généré : {response_tts_path}")
+            audio_ctrl.play(response_tts_path)
+    except KeyboardInterrupt:
+        print("\nConversation interrompue par l'utilisateur.")
+
+
+    
