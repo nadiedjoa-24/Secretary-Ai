@@ -4,7 +4,7 @@ from typing import List, Literal, TypedDict
 
 
 
-class Message(TypedDict):
+class Message(BaseModel):
     role: Literal["user", "assistant", "system"]
     content: str
 

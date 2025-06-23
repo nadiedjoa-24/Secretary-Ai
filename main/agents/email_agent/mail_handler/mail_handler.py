@@ -3,6 +3,10 @@ import imaplib
 from email import policy
 from email.parser import BytesParser
 from email.header import decode_header
+import smtplib
+from datetime import datetime, timedelta
+from email.utils import parsedate_to_datetime
+from email.mime.text import MIMEText
 from pydantic import BaseModel
 from typing import Optional, List, Literal
 
@@ -19,6 +23,15 @@ class eMail(BaseModel):
     def __str__(self):
         return f"Email ID: {self.id},\n Subject: {self.subject},\n Sender: {self.sender},\n Date: {self.date}"
     
+class EMail(BaseModel):
+    recipient: str
+    content: str
+    subject: Optional[str] = None
+
+    def __str__(self):
+        return f"Recipient: {self.recipient},\n Subject: {self.subject},\n Content: {self.content}." 
+
+    
 
 class MailBox(BaseModel):
     """
@@ -33,8 +46,8 @@ class MAIL_HANDLER:
     IMAP_PORT = 993
 
     def __init__(self, 
-                EMAIL: str = None,
-                PASSWORD: str = None,
+                EMAIL: str = "arthisow@gmail.com",
+                PASSWORD: str = "wbvtovmwbfkkwdde" ,
                 ):
         self.EMAIL = EMAIL
         self.PASSWORD = PASSWORD
@@ -49,7 +62,7 @@ class MAIL_HANDLER:
             except KeyError as e:
                 raise ValueError(f"PASSWORD is required for IMAP connection, please provide one at instanciation or in environment :{e}")
         
-        self.mail = None
+        self.mailbox = None
 
         try:
             self._connect()
@@ -65,14 +78,14 @@ class MAIL_HANDLER:
         Connect client to the IMAP server associated with the EMAIL and PASSWORD.
         """
         try:
-            self.mail = imaplib.IMAP4_SSL(host=self.IMAP_SERVER, port=self.IMAP_PORT)
-            self.mail.login(self.EMAIL, self.PASSWORD)
+            self.mailbox = imaplib.IMAP4_SSL(host=self.IMAP_SERVER, port=self.IMAP_PORT)
+            self.mailbox.login(self.EMAIL, self.PASSWORD)
         except imaplib.IMAP4.error as e:
             raise ValueError(f"Erreur de connexion à la boîte mail : {e}")
 
     def _disconnect(self):
         try :
-            self.mail.logout()
+            self.mailbox.logout()
             print("Déconnexion réussie de la boîte mail.")
         except imaplib.IMAP4.error as e:
             print(f"Erreur de déconnexion de la boîte mail : {e}")
@@ -84,8 +97,8 @@ class MAIL_HANDLER:
         """
         unread_emails = []
         self._connect()
-        self.mail.select("INBOX")
-        status, messages = self.mail.search(None, 'UNSEEN')
+        self.mailbox.select("INBOX")
+        status, messages = self.mailbox.search(None, 'UNSEEN')
         print(f"test: {messages[0]}")
         if status != "OK":
             print("Erreur lors de la récupération des emails.")
@@ -93,22 +106,19 @@ class MAIL_HANDLER:
 
         email_ids = messages[0].split()
         for e_id in email_ids:
-            status, data = self.mail.fetch(e_id, "(RFC822)")
+            status, data = self.mailbox.fetch(e_id, "(RFC822)")
             if status == "OK":
                 raw_email = data[0][1]
                 msg = BytesParser(policy=policy.default).parsebytes(raw_email)
 
-                # Decode subject header
                 dh = decode_header(msg["Subject"] or "")
                 subject, encoding = dh[0] if dh else ("", None)
                 if isinstance(subject, bytes):
                     subject = subject.decode(encoding or "utf-8", errors="ignore")
 
-                # Extract sender and date
                 sender = msg.get("From", "")
                 date = msg.get("Date", "")
 
-                # Extract plain text body
                 content = ""
                 if msg.is_multipart():
                     for part in msg.walk():
@@ -138,9 +148,9 @@ class MAIL_HANDLER:
         Move an email according to its ID to the target folder.
         """
         if target_folder in self.get_folders():
-            self.mail.copy(email_id, target_folder)
-            self.mail.store(email_id, '+FLAGS', '\\Deleted')
-            self.mail.expunge()
+            self.mailbox.copy(email_id, target_folder)
+            self.mailbox.store(email_id, '+FLAGS', '\\Deleted')
+            self.mailbox.expunge()
         else:
             print(f"Folder {target_folder} does not exist. Please choose one of the following: {self.get_folders()}")
 
@@ -150,7 +160,7 @@ class MAIL_HANDLER:
         Return all available folders in the mailbox.
         """
         try:
-            status, folders = self.mail.list()
+            status, folders = self.mailbox.list()
             if status != "OK":
                 print("Error retrieving mailbox's folders.")
                 return []
@@ -164,20 +174,66 @@ class MAIL_HANDLER:
         """
         Delete all emails older than 30 days.
         """
-        self.mail.select("INBOX")
-        status, messages = self.mail.search(None, 'ALL')
+        self.mailbox.select("INBOX")
+        status, messages = self.mailbox.search(None, 'ALL')
         if status != "OK":
             print("Error retrieving old emails")
             return
 
         email_ids = messages[0].split()
         for e_id in email_ids:
-            status, data = self.mail.fetch(e_id, "(RFC822)")
+            status, data = self.mailbox.fetch(e_id, "(RFC822)")
             if status == "OK":
-                # Récupérer la date de l'email mais jsp comment faire
-                pass
+                raw_email = data[0][1]
+                msg = BytesParser(policy=policy.default).parsebytes(raw_email)
+                date_header = msg.get("Date")
+                try:
+                    email_date = parsedate_to_datetime(date_header)
+                except Exception:
+                    continue
 
-        self.mail.expunge()
+                cutoff = datetime.now(email_date.tzinfo) - timedelta(days=30)
+                if email_date < cutoff:
+                    self.mailbox.store(e_id, '+FLAGS', '\\Deleted')
+                    print(f"Deleted email {e_id.decode()} dated {email_date.isoformat()}")
+
+        self.mailbox.expunge()
+    
+
+
+    def send_email(self, email_to_send: EMail):
+        """
+        Send an email to the recipient via SMTP.
+        """
+        print(email_to_send)
+        msg = MIMEText(email_to_send.content, "plain", "utf-8")
+        if email_to_send.subject:
+            msg["Subject"] = email_to_send.subject
+        msg["From"] = self.EMAIL
+        msg["To"] = email_to_send.recipient
+
+        try:
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as smtp:
+                smtp.login(self.EMAIL, self.PASSWORD)
+                smtp.send_message(msg)
+            print("Email sent via SSL port 465.")
+            return
+        except Exception as e1:
+            print(f"Port 465 failed ({e1}), trying STARTTLS on port 587...")
+
+        # Second attempt: STARTTLS on port 587
+        try:
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as smtp:
+                smtp.ehlo()
+                smtp.starttls()
+                smtp.ehlo()
+                smtp.login(self.EMAIL, self.PASSWORD)
+                smtp.send_message(msg)
+            print("Email sent via STARTTLS port 587.")
+        except Exception as e2:
+            raise ValueError(f"Failed to send email on port 465 ({e1}) and port 587 ({e2})")
+
+
 
     
 
@@ -204,3 +260,14 @@ if __name__ == "__main__":
         print("[ERROR] : No emails to move.")
     
     mail_handler._disconnect()
+
+    print("== Test envoi email ==")
+    email = EMail(
+        recipient="yanic.rothlingshofer@gmail.com",
+        content="Ceci est un test d'envoi d'email depuis le MAIL_HANDLER.",
+        subject="Test Email")
+    try:
+        mail_handler.send_email(email)
+        print("Email sent successfully.")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
