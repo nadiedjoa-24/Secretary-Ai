@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Résumés des mails</title>
+</head>
+
+<body>
+    <h1>Résumés des mails</h1>
+    <form action="{{ url_for('summarize') }}" method="get">
+        <button type="submit">Rafraîchir les résumés</button>
+    </form>
+    {% if summaries and summaries|length > 0 %}
+    <ul>
+        {% for summary in summaries %}
+        <li>{{ summary }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Vous êtes bien à jour</p>
+    {% endif %}
+</body>
+
+</html>
