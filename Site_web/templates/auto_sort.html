@@ -2,24 +2,112 @@
 <html>
 
 <head>
-    <title>Tri automatique</title>
+    <title>Gestion des mails</title>
+    <style>
+        body {
+            background: #003c76;
+            font-family: Arial, sans-serif;
+            color: #044;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            color: rgb(255, 255, 255);
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .refresh-btn {
+            background: #35bcc0;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 20px auto 30px auto;
+            display: block;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #00bfae;
+        }
+
+        .loader {
+            border: 8px solid #e0f7fa;
+            border-top: 8px solid #00bfae;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 40px auto 30px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+    <script>
+        function showLoader() {
+            document.getElementById('loader').style.display = 'block';
+        }
+    </script>
 </head>
 
 <body>
-    <h1>Tri automatique des mails</h1>
+    <h1>Gestion des mails</h1>
+    <div style="text-align:center;">
+        <form action="/" method="get" style="display:inline;" onsubmit="showLoader()">
+            <input type="hidden" name="action" value="summarize">
+            <button type="submit" class="refresh-btn">Résumer les mails</button>
+        </form>
+        <form action="/" method="post" style="display:inline;" onsubmit="showLoader()">
+            <button type="submit" class="refresh-btn" name="auto_sort" value="1">Tri
+                automatique
+            </button>
+        </form>
+    </div>
+    <div id="loader" class="loader"></div>
     {% if message %}
     <p style="color:green;">{{ message }}</p>
     {% endif %}
-    {% if classifications and classifications|length > 0 %}
+    {% if messages %}
+    {% for msg in messages %}
+    <p style="color:green;">{{ msg }}</p>
+    {% endfor %}
+    {% endif %}
+    {% if mode == "summarize" and mails and mails|length > 0 %}
     <ul>
-        {% for folder in classifications %}
-        <li>Le message a été classé dans : <b>{{ folder }}</b></li>
+        {% for mail in mails %}
+        <li>
+            <b>Date :</b> {{ mail.date }}<br>
+            <b>Résumé :</b> {{ mail.summary }}<br>
+            <form method="post" style="margin-top:10px;">
+                <input type="hidden" name="email_id" value="{{ mail.id }}">
+                <label>Souhaitez-vous déplacer ce mail ?</label>
+                <select name="target_folder">
+                    {% for folder in folders %}
+                    <option value="{{ folder }}">{{ folder }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Déplacer</button>
+            </form>
+        </li>
         {% endfor %}
     </ul>
-    {% else %}
-    <p>Aucun mail à trier.</p>
+    {% elif mode == "summarize" %}
+    <p>Vous êtes bien à jour</p>
     {% endif %}
-    <a href="{{ url_for('summarize') }}">Retour</a>
 </body>
 
 </html>
