@@ -2,7 +2,7 @@ import os, sys
 sys.path.insert(
     0,
     os.path.abspath(
-        os.path.join(__file__, '..','..','..','..','..')
+        os.path.join(__file__,'..','..','..','..')
     )
 )
 from main.agents.email_agent.mail_handler.mail_handler import MAIL_HANDLER, eMail, EMail
