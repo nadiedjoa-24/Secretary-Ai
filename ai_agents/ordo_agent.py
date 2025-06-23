@@ -1,12 +1,19 @@
-import os
+import os, sys
+sys.path.insert(
+    0,
+    os.path.abspath(
+        os.path.join(__file__, '..','..')
+    )
+)
+from common.ai.API_client import API_Client
+from common.ai.audio_controller.audio_controller import AUDIO_Controller
+from common.ai.model.BaseAIModel import Message
 import datetime
-from openai import OpenAI
-import speech_recognition as sr
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from typing import List
 from pydantic import BaseModel
-import pyttsx3  # Synthèse vocale
+import json
 
 class MedicamentInfo(BaseModel):
     nom: str
@@ -19,40 +26,43 @@ class PatientInfo(BaseModel):
     medicaments: List[MedicamentInfo]
 
 class OrdoAgent:
-    def __init__(self):
-        self.openai_api_key = os.getenv("OPENAI_API_KEY2")
-        self.openai_client = OpenAI(api_key=self.openai_api_key)
+    def __init__(self, api_key=None, audio_device_index=1):
+        self.api_client = API_Client(API_KEY=api_key)
+        self.audio_ctrl = AUDIO_Controller(device_index=audio_device_index)
         self.medecin_info = "Dr Jean Martin"
-        self.voix = pyttsx3.init()
-        self.voix.setProperty('rate', 150)
+        self.full_transcript = []  # <-- AJOUTE CETTE LIGNE
+
+        self.ordo_extraction_prompt = [
+            {
+                "role": "system",
+                "content": (
+                    "Vous êtes un médecin généraliste. "
+                    "Votre tâche est d'extraire UNIQUEMENT les informations suivantes à partir de la conversation vocale du patient :\n"
+                    "- Nom du patient\n"
+                    "- Pathologie (motif de l'ordonnance)\n"
+                    "- Médicaments (nom, posologie, durée)\n"
+                    "N'EXTRAIRE QUE ce qui est explicitement dit, SANS commentaire, SANS explication, SANS phrase hors sujet. "
+                    "Répondez STRICTEMENT sous forme de dictionnaire JSON avec les champs : patient, pathologie, medicaments (liste de {nom, posologie, durée}). "
+                    "Si une information n'est pas présente, laissez le champ vide ou la liste vide. "
+                    "NE PAS répondre à côté, NE PAS donner d'avis médical, NE PAS reformuler, NE PAS commenter."
+                )
+            }
+        ]
 
     def parler(self, texte: str):
-        self.voix.say(texte)
-        self.voix.runAndWait()
+        """Synthèse vocale et lecture audio via API_Client et AUDIO_Controller."""
+        tts_path = self.api_client.tts(texte)
+        print(f"TTS généré : {tts_path}")
+        self.audio_ctrl.play(tts_path)
 
     def reconnaitre_voix(self):
-        recognizer = sr.Recognizer()
-        with sr.Microphone() as source:
-            print("🎤 Parlez maintenant...")
-            recognizer.pause_threshold = 0.5
-            recognizer.energy_threshold = 120
-            recognizer.dynamic_energy_threshold = False
-            recognizer.adjust_for_ambient_noise(source, duration=1)
-
-            try:
-                audio = recognizer.listen(source, timeout=10)
-                texte = recognizer.recognize_google(audio, language="fr-FR")
-                print(f"📝 Requête vocale reconnue : {texte}")
-                return texte
-            except sr.UnknownValueError:
-                print("❌ Erreur : Impossible de reconnaître la voix.")
-                return None
-            except sr.RequestError:
-                print("❌ Erreur : Problème avec le service de reconnaissance vocale.")
-                return None
-            except sr.WaitTimeoutError:
-                print("⏱️ Aucun son détecté.")
-                return None
+        """Écoute le micro, enregistre, puis transcrit avec l'API_Client."""
+        print("Veuillez parler après le bip...")
+        audio_path = self.audio_ctrl.listen()
+        msg = self.api_client.stt(audio_path)
+        print(f"Transcription : {msg.content}")
+        self.full_transcript.append({"role": "user", "content": msg.content})
+        return msg.content
 
     def generer_ordonnance(self, informations: PatientInfo):
         dossier_ordonnances = os.path.expanduser("~/Desktop/ordonnances")
@@ -115,17 +125,27 @@ class OrdoAgent:
         print(f"📄 Ordonnance générée : {chemin_fichier}")
 
     def remplir_ordonnance_par_questions(self):
-        self.parler("Commençons la création d'une ordonnance.")
-        
+        # Présentation claire à l'utilisateur
+        self.parler("Bonjour, je suis votre assistant médecin. Je vais remplir une ordonnance à partir des informations que vous allez me donner oralement. Veuillez répondre précisément à chaque question, en indiquant le nom du patient, la pathologie, puis chaque médicament avec sa posologie et la durée du traitement.")
+
+        # Nom du patient
         self.parler("Quel est le nom du patient ?")
         nom_patient = self.reconnaitre_voix()
         if not nom_patient:
             self.parler("Je n'ai pas compris le nom du patient. Abandon.")
             return
 
+        # Pathologie
+        self.parler("Quel est le motif ou la pathologie ?")
+        pathologie = self.reconnaitre_voix()
+        if not pathologie:
+            self.parler("Je n'ai pas compris la pathologie. Abandon.")
+            return
+
+        # Médicaments
         medicaments = []
         while True:
-            self.parler("Nom du médicament ?")
+            self.parler("Nom du médicament ? Dites 'c'est tout' si vous avez terminé.")
             nom_med = self.reconnaitre_voix()
             if nom_med and "c'est tout" in nom_med.lower():
                 break
@@ -133,10 +153,10 @@ class OrdoAgent:
                 self.parler("Je n'ai pas compris. Recommençons ce médicament.")
                 continue
 
-            self.parler("Quelle quantité ?")
-            quantite = self.reconnaitre_voix()
-            if not quantite:
-                self.parler("Quantité non comprise. Recommençons ce médicament.")
+            self.parler("Quelle posologie ? Par exemple : 2 comprimés matin et soir.")
+            posologie = self.reconnaitre_voix()
+            if not posologie:
+                self.parler("Posologie non comprise. Recommençons ce médicament.")
                 continue
 
             self.parler("Pendant combien de jours ?")
@@ -145,17 +165,88 @@ class OrdoAgent:
                 self.parler("Durée non comprise. Recommençons ce médicament.")
                 continue
 
-            medicaments.append(MedicamentInfo(nom=nom_med, quantite=quantite, duree=duree))
-            self.parler("Médicament ajouté. Dites 'c'est tout' si vous avez terminé.")
+            medicaments.append({
+                "nom": nom_med,
+                "quantite": posologie,
+                "duree": duree
+            })
+            self.parler("Médicament ajouté.")
 
         if not medicaments:
             self.parler("Aucun médicament ajouté. Ordonnance annulée.")
             return
 
-        info_patient = PatientInfo(patient=nom_patient, medecin=self.medecin_info, medicaments=medicaments)
+        # Création de l'objet PatientInfo adapté
+        info_patient = PatientInfo(
+            patient=patient,
+            medecin=self.medecin_info,
+            medicaments=[
+                MedicamentInfo(nom=m["nom"], quantite=m["posologie"], duree=m["durée"])
+                for m in medicaments
+            ],
+            pathologie=pathologie
+        )
+
+        # Génération de l'ordonnance
         self.generer_ordonnance(info_patient)
         self.parler("Ordonnance générée avec succès.")
 
+    def remplir_ordonnance_auto(self):
+        self.parler("Je suis votre médecin. Veuillez me donner toutes les informations pour l'ordonnance, puis dites 'c'est tout' à la fin.")
+        while True:
+            user_text = self.reconnaitre_voix()
+            if "c'est tout" in user_text.lower():
+                break
+        infos = self.extraire_infos_ordonnance()
+        if infos:
+            patient = infos.get("patient", "")
+            pathologie = infos.get("pathologie", "")
+            medicaments = infos.get("medicaments", [])
+            info_patient = PatientInfo(
+                patient=patient,
+                medecin=self.medecin_info,
+                medicaments=[
+                    MedicamentInfo(
+                        nom=m.get("nom", ""),
+                        quantite=m.get("posologie", ""),
+                        duree=m.get("durée", "")
+                    ) for m in medicaments
+                ]
+            )
+            self.generer_ordonnance(info_patient)
+            self.parler("Ordonnance générée avec succès.")
+        else:
+            self.parler("Je n'ai pas pu extraire toutes les informations nécessaires.")
+
+    def discuter(self):
+        """Boucle conversationnelle complète."""
+        print("=== Conversation continue (dit 'exit' pour quitter) ===")
+        while True:
+            user_text = self.reconnaitre_voix()
+            if user_text.strip().lower() in ("exit", "quit", "stop"):
+                print("Fin de la conversation.")
+                break
+            ai_response = self.api_client.basic([Message(role="user", content=user_text)])
+            print(f"Réponse AI : {ai_response.content}")
+            self.parler(ai_response.content)
+
+    def extraire_infos_ordonnance(self):
+        messages = self.ordo_extraction_prompt + self.full_transcript
+        response = self.api_client.basic(messages)
+        try:
+            infos = json.loads(response.content)
+            return infos
+        except Exception as e:
+            print("Erreur extraction infos ordonnance :", e)
+            return None
+
 if __name__ == "__main__":
     agent = OrdoAgent()
-    agent.remplir_ordonnance_par_questions()
+    agent.discuter()
+    transcript = "..."  # Remplacez par la transcription réelle
+    infos = agent.extraire_infos_ordonnance(transcript)
+    if infos:
+        patient = infos.get("patient", "")
+        pathologie = infos.get("pathologie", "")
+        medicaments = infos.get("medicaments", [])
+        # medicaments = [{"nom": ..., "posologie": ..., "durée": ...}, ...]
