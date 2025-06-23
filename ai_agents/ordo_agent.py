@@ -34,8 +34,8 @@ class OrdoAgent:
         recognizer = sr.Recognizer()
         with sr.Microphone() as source:
             print("🎤 Parlez maintenant...")
-            recognizer.pause_threshold = 2.0
-            recognizer.energy_threshold = 300
+            recognizer.pause_threshold = 0.5
+            recognizer.energy_threshold = 120
             recognizer.dynamic_energy_threshold = False
             recognizer.adjust_for_ambient_noise(source, duration=1)
 
