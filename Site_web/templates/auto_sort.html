@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tri automatique</title>
+</head>
+
+<body>
+    <h1>Tri automatique des mails</h1>
+    {% if message %}
+    <p style="color:green;">{{ message }}</p>
+    {% endif %}
+    {% if classifications and classifications|length > 0 %}
+    <ul>
+        {% for folder in classifications %}
+        <li>Le message a été classé dans : <b>{{ folder }}</b></li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Aucun mail à trier.</p>
+    {% endif %}
+    <a href="{{ url_for('summarize') }}">Retour</a>
+</body>
+
+</html>

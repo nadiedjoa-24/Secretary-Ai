@@ -3,22 +3,130 @@
 
 <head>
     <title>Résumés des mails</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            font-family: Arial, sans-serif;
+            color: #044;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            color: #088;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .refresh-btn {
+            background: #1de9b6;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 20px auto 30px auto;
+            display: block;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #00bfae;
+        }
+
+        ul {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 0;
+            list-style: none;
+        }
+
+        li {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 12px;
+            margin-bottom: 18px;
+            padding: 18px 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+        }
+
+        b {
+            color: #088;
+        }
+
+        i {
+            color: #009688;
+        }
+
+        .loader {
+            border: 8px solid #e0f7fa;
+            border-top: 8px solid #00bfae;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 40px auto 30px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .center {
+            text-align: center;
+        }
+    </style>
+    <script>
+        function showLoader() {
+            document.getElementById('loader').style.display = 'block';
+        }
+    </script>
 </head>
 
 <body>
     <h1>Résumés des mails</h1>
-    <form action="{{ url_for('summarize') }}" method="get">
-        <button type="submit">Rafraîchir les résumés</button>
+    <form action="{{ url_for('summarize') }}" method="get" onsubmit="showLoader()">
+        <button type="submit" class="refresh-btn">Rafraîchir les résumés</button>
     </form>
-    {% if summaries and summaries|length > 0 %}
-    <ul>
-        {% for summary in summaries %}
-        <li>{{ summary }}</li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>Vous êtes bien à jour</p>
-    {% endif %}
+    <form action="{{ url_for('auto_sort') }}" method="post" style="display:inline;">
+        <button type="submit" class="refresh-btn" style="background:#00bfae;">Tri automatique</button>
+    </form>
+    <div id="loader" class="loader"></div>
+    <div class="center">
+        {% if message %}
+        <p style="color:green;">{{ message }}</p>
+        {% endif %}
+        {% if mails and mails|length > 0 %}
+        <ul>
+            {% for mail in mails %}
+            <li>
+                <b>Date :</b> {{ mail.date }}<br>
+                <b>Résumé :</b> {{ mail.summary }}<br>
+                <form method="post" style="margin-top:10px;">
+                    <input type="hidden" name="email_id" value="{{ mail.id }}">
+                    <label>Souhaitez-vous déplacer ce mail ?</label>
+                    <select name="target_folder">
+                        {% for folder in folders %}
+                        <option value="{{ folder }}">{{ folder }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit">Déplacer</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Vous êtes bien à jour</p>
+        {% endif %}
+    </div>
 </body>
 
 </html>
