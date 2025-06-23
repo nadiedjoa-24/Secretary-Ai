@@ -5,14 +5,18 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from common.ai.model.BaseAIModel import BaseAIModel, Message
 from typing import Literal, Optional, List, TypedDict
 from pydantic import BaseModel
+
 import openai
+from google.cloud import texttospeech
+
+import os
 
 from common.ai.audio_controller.audio_controller import AUDIO_Controller
 
 
 class API_Client(BaseAIModel):
 
-    def __init__(self,  API_KEY: Optional[str] = None):
+    def __init__(self, API_KEY: Optional[str] = None, google_key_filename: str = "google_cloud_tts_key.json"):
         self.API_KEY = API_KEY
         if not self.API_KEY:
             try:
@@ -21,6 +25,7 @@ class API_Client(BaseAIModel):
                 raise ValueError(f"API_KEY is required for API backend, please provide one at instanciation or in environment :{e}")
 
         self.client = openai.OpenAI(api_key=self.API_KEY)
+        self.google_key_path = os.path.join(os.getcwd(), google_key_filename)
 
 
 
@@ -71,24 +76,52 @@ class API_Client(BaseAIModel):
             raise ValueError("No reponse from the API.")
 
 
-    def tts(self, text: str, filename: str = "output.mp3") -> str:
-
+    def tts(self, text: str, filename: str = "output.wav", engine: int = 2) -> str:
         output_path = "./audio_recordings/" + filename
-        instr = "Speak in a neutral tone, you are a secretary assistant and must be professional."
-
-        response = self.client.audio.speech.with_raw_response.create(
-            model = "gpt-4o-mini-tts",
-            voice = "alloy",
-            input = text,
-            instructions = instr
-        )
-        if response.content:
-            with open(output_path, "wb") as f:
-                f.write(response.content)
-            
-            return filename
+        if engine == 1:
+            # OpenAI TTS
+            instr = "Speak in a neutral tone, you are a secretary assistant and must be professional."
+            response = self.client.audio.speech.with_raw_response.create(
+                model="gpt-4o-mini-tts",
+                voice="alloy",
+                input=text,
+                instructions=instr
+            )
+            if response.content:
+                with open(output_path, "wb") as f:
+                    f.write(response.content)
+                return filename
+            else:
+                raise ValueError("No response from the OpenAI TTS API.")
+        elif engine == 2:
+            # Google Cloud TTS: use service account file if present
+            if os.path.isfile(self.google_key_path):
+                tts_client = texttospeech.TextToSpeechClient.from_service_account_file(
+                    self.google_key_path
+                )
+            else:
+                tts_client = texttospeech.TextToSpeechClient()
+            synthesis_input = texttospeech.SynthesisInput(text=text)
+            voice_params = texttospeech.VoiceSelectionParams(
+                language_code="fr-FR",
+                ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
+            )
+            audio_config = texttospeech.AudioConfig(
+                audio_encoding=texttospeech.AudioEncoding.LINEAR16
+            )
+            response = tts_client.synthesize_speech(
+                input=synthesis_input,
+                voice=voice_params,
+                audio_config=audio_config
+            )
+            if response.audio_content:
+                with open(output_path, "wb") as f:
+                    f.write(response.audio_content)
+                return filename
+            else:
+                raise ValueError("No response from the Google Cloud TTS API.")
         else:
-            raise ValueError("No response from the API.")
+            raise ValueError("Invalid engine parameter: must be 1 (OpenAI) or 2 (Google Cloud).")
 
         
     
@@ -165,6 +198,3 @@ if __name__ == "__main__":
             audio_ctrl.play(response_tts_path)
     except KeyboardInterrupt:
         print("\nConversation interrompue par l'utilisateur.")
-
-
-    

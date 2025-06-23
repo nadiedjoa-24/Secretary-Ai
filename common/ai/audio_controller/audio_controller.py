@@ -95,7 +95,7 @@ class AUDIO_Controller:
             raise RuntimeError("Aucune voix détectée.")
 
         timestamp = int(time.time())
-        filename = f"recording_{timestamp}.wav"
+        filename = f"output_stt.wav"
         filepath = os.path.join(self.directory, filename)
 
         with wave.open(filepath, 'wb') as wf:

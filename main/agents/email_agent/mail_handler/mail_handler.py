@@ -47,7 +47,7 @@ class MAIL_HANDLER:
 
     def __init__(self, 
                 EMAIL: str = "arthisow@gmail.com",
-                PASSWORD: str = "wbvtovmwbfkkwdde" ,
+                PASSWORD: str = "***REMOVED-GMAIL-APP-PASSWORD-2***" ,
                 ):
         self.EMAIL = EMAIL
         self.PASSWORD = PASSWORD
@@ -244,7 +244,7 @@ class MAIL_HANDLER:
 if __name__ == "__main__":
  
     EMAIL = "arthisow@gmail.com"
-    PASSWORD = "wbvtovmwbfkkwdde" 
+    PASSWORD = "***REMOVED-GMAIL-APP-PASSWORD-2***" 
     mail_handler = MAIL_HANDLER(EMAIL, PASSWORD)
 
     mail_handler.get_unread_emails()
