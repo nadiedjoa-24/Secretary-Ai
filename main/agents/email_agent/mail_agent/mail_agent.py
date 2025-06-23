@@ -80,8 +80,8 @@ class Mail_Agent:
         """
         Classify the content of a given email and assign it to a folder among available ones.
         """
-        available_folders = self.M.delete_old_emails()
-        prompt = f"You are an helpful assistant that classifies the following email content into one of the available folders: {available_folders}. This is the email content you have to classify : {email.content}."
+        available_folders = self.M.get_folders()
+        prompt = f"You are an helpful assistant that classifies the following email content into one of the available folders: {available_folders}. This is the email content you have to classify : {email.content}. You have to answer with the name of the folder ony."
         msg: Message = Message(role="assistant", content=prompt)
         response = self.client.basic([msg]).content
         return response
@@ -149,15 +149,18 @@ class Mail_Agent:
 if __name__ == "__main__":
     mail_agent = Mail_Agent(API_KEY = "***REMOVED-OPENAI-KEY-1***")
 
-    print("== Test de résumé d'une MAILBOX ==")
-    summaries = mail_agent.summarize_mailbox()
-    for idx, summary in enumerate(summaries, 1):
-        print(f"{idx}, {summary}")
-    
-    print("\n=== Classify Mailbox ===")
-    classifications = mail_agent.classify_mailbox()
-    for idx, classification in enumerate(classifications, 1):
-        print(f"{idx}. {classification}")
+
+
+    # print("== Test de résumé d'une MAILBOX ==")
+    # summaries = mail_agent.summarize_mailbox()
+    # for idx, summary in enumerate(summaries, 1):
+    #     print(f"{idx}, {summary}")
+    print("\n=== Test classify_mailbox ===")
+    try:
+        moved_folders = mail_agent.classify_mailbox()
+        print("Classify mailbox result:", moved_folders)
+    except Exception as e:
+        print("Error classifying mailbox:", e)
 
     print("\n=== Send Test Email ===")
     try:
@@ -171,3 +174,4 @@ if __name__ == "__main__":
         print("Error sending test email:", e)
 
 
+    

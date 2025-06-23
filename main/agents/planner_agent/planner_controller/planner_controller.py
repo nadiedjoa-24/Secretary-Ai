@@ -212,11 +212,8 @@ if __name__ == "__main__":
                 f.unlink()
         test_dir.rmdir()
 
-        # Initialize controller and verify empty planning
     controller = PlannerController(year=2025)
 
-
-    # Define an appointment and test add_rdv
     appt = Appointment(
         name="Alice",
         surname="Smith",

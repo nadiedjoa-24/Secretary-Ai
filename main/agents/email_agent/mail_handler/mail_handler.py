@@ -140,6 +140,7 @@ class MAIL_HANDLER:
                 )
                 unread_emails.append(email_obj)
 
+        self.mails = unread_emails
         return unread_emails
 
 
@@ -147,6 +148,7 @@ class MAIL_HANDLER:
         """
         Move an email according to its ID to the target folder.
         """
+        self.mailbox.select("INBOX")
         if target_folder in self.get_folders():
             self.mailbox.copy(email_id, target_folder)
             self.mailbox.store(email_id, '+FLAGS', '\\Deleted')
@@ -164,7 +166,7 @@ class MAIL_HANDLER:
             if status != "OK":
                 print("Error retrieving mailbox's folders.")
                 return []
-            return [folder.decode().split(' "/" ')[-1] for folder in folders]
+            return [folder.decode().split(' "/" ')[-1].strip('"') for folder in folders]
         except imaplib.IMAP4.error as e:
             print(f"Error retrieving mailbox's folders: {e}")
             return []
@@ -255,7 +257,7 @@ if __name__ == "__main__":
     folders = mail_handler.get_folders()
     print(f"Available folders: {folders}")
     try:
-        mail_handler.move_email(mail_handler.mails[0].id, "test")
+        mail_handler.move_email(mail_handler.mails[0].id, "RDV")
     except IndexError:
         print("[ERROR] : No emails to move.")
     
