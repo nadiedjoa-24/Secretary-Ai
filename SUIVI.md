@@ -87,45 +87,25 @@
 -(Yanic) : Redéfinition de la méthode utilisée pour l'ordonnance, + optimisation du planning  
 -(Théophile) : Finetuning de la voix   
 -(Yifan) : Mise en place d'un site web pour le projet  
-
-
 ##Lundi 2 Juin 2025
 (Yanic) : Finetuning de la voix, utilisation d'une voix plus naturelle pour les TTS/STT
-
 (Théophile) : Tests comparatifs entre plusieurs APIs de voix (Google, ElevenLabs, OpenAI)
-
 (Antoine) : Début de l'intégration d'un résumé automatique dans l'interface mail
-
 (Agshay) : Refactoring de l’agent ordonnance pour intégrer des règles médicales conditionnelles simples
-
 (Yifan) : Setup du backend Flask + liaison avec la base de données MongoDB (sans authentification par token)
-
 ##Lundi 9 Juin 2025
-
 (Agshay) : Détection automatique des médicaments, posologie, forme galénique et fréquence dans les requêtes médicales
-
 (Antoine) : Mise en place de la détection automatique des mots-clés importants dans les mails pour trier les priorités
-
 (Yifan) : Finalisation du backend Flask avec structuration du code pour héberger les différentes fonctionnalités
-
 ##Mercredi 11 Juin 2025 
-
 (Agshay, Antoine, Yifan) : Conception de l’affiche de présentation du projet sur Canva (graphisme, contenu, mise en page)
-
 (Théophile & Yanic) : Tests croisés des fonctionnalités principales (mail handler, ordonnance vocale, site Flask)
-
 (Antoine) : Ajustement de la mise en page de l'interface web (visuels, couleurs, ergonomie)
-
 ##Vendredi 13 Juin 2025
-
 (Yanic et Yifan) : Ajouts sur le site web de bouttons : tri automatique + résumé des mails 
-
 (Théophile, Antoine ) : Agent planificateur mis sur le site, mais quelques fonctionnalités sont à rajouter
-
 (Agshay) : Parsing des données pour l'ordonnance afin d'être plus concis 
-
 ##Mardi 17 Juin 2025 
-
 (Agshay, Antoine et Yifan) : Finalisation de l'affiche
 
 
