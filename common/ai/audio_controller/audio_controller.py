@@ -3,6 +3,7 @@ import pyaudio
 import wave
 import numpy as np
 import time
+import speech_recognition as sr
 
 class AUDIO_Controller:
     def __init__(self, directory: str = "./audio_recordings/", device_index: int = None) -> None:
@@ -53,15 +54,10 @@ class AUDIO_Controller:
             if dev['maxInputChannels'] > 0:
                 print(f"Entrée {i}: {dev['name']} (canaux: {dev['maxInputChannels']})")
 
-        print("⏳ Calibration du bruit de fond (restez silencieux)...")
-        noise_levels = []
-        for _ in range(self.noise_calibration_chunks):
-            data = stream.read(self.chunk, exception_on_overflow=False)
-            noise_levels.append(self._rms(data))
-        noise_floor = sum(noise_levels) / len(noise_levels)
-        threshold = noise_floor * self.threshold_factor
-        print(f"  • Bruit moyen = {noise_floor:.1f} → seuil = {threshold:.1f}\n")
-        print("▶️ Parlez pour démarrer l'enregistrement...")
+        # Seuil fixe sans calibration
+        threshold = self.threshold
+        print(f"▶️ Prêt. Utilisation du seuil fixe = {threshold:.1f}")
+
         frames = []
         envelope = 0.0
         alpha = self.alpha
@@ -107,13 +103,11 @@ class AUDIO_Controller:
         print(f"✅ Enregistré dans : {filepath}")
         return filepath
 
-    def play(self, filename: str) -> None:
+    def play(self, filepath: str) -> None:
         """
         Joue le fichier audio spécifié.
         filename peut être un chemin absolu ou relatif à directory.
         """
-        # Détermine chemin complet
-        filepath = filename if os.path.isabs(filename) else os.path.join(self.directory, filename)
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Fichier introuvable : {filepath}")
 
@@ -134,14 +128,37 @@ class AUDIO_Controller:
         wf.close()
         print("✅ Lecture terminée.")
 
+    def _listen(self) -> str:
+        """
+        Enregistre l'audio depuis le micro avec SpeechRecognition et enregistre dans un fichier WAV.
+        Retourne le chemin du fichier audio créé.
+        """
+        r = sr.Recognizer()
+        with sr.Microphone(device_index=self.device_index) as source:
+            print("⏳ Calibration du bruit ambiant (restez silencieux)...")
+            r.adjust_for_ambient_noise(source, duration=1)
+            r.pause_threshold = 1.0
+            print("▶️ Parlez maintenant…")
+            audio_data = r.listen(source)
+
+        timestamp = int(time.time())
+        filename = f"audio_input.wav"
+        filepath = os.path.join(self.directory, filename)
+
+        with open(filepath, "wb") as f:
+            f.write(audio_data.get_wav_data())
+
+        print(f"✅ Audio enregistré dans : {filepath}")
+        return filepath
+
     def __del__(self):
         self.audio.terminate()
 
 # Test 
 if __name__ == "__main__":
-    ctrl = AUDIO_Controller(device_index=1)
+    ctrl = AUDIO_Controller(device_index=2)
     try:
-        file_path = ctrl.listen()
+        file_path = ctrl._listen()
         ctrl.play(file_path)
     except Exception as e:
         print(f"❌ Erreur : {e}")

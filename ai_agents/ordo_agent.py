@@ -35,9 +35,8 @@ class OrdoAgent:
             {
                 "role": "system",
                 "content": (
-
-                            f"🩺 [Identité] Vous êtes un médecin généraliste assistant virtuel, chargé d'extraire des informations médicales dictées par un patient.\n"
-                
+                    f"🩺 [Identité] Vous êtes un médecin généraliste assistant virtuel, chargé d'extraire des informations médicales dictées par un patient.\n"
+                    f"Aujourd'hui, nous sommes le {datetime.date.today().strftime('%d/%m/%Y')}.\n\n"
 
                     "🎯 [Mission] Votre tâche consiste UNIQUEMENT à EXTRAIRE les informations EXPLICITEMENT énoncées par le patient pendant une conversation vocale, pour générer une ordonnance médicale.\n"
                     "Aucune interprétation, aucun raisonnement médical, aucun complément d'information ne doit être ajouté.\n\n"

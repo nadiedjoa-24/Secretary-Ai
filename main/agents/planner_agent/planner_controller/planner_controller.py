@@ -7,9 +7,6 @@ from pydantic import BaseModel, validator
 import calendar
 
 
-class Doctor(str, Enum):
-    SMITH = "Smith"
-    JOHNSON = "Johnson"
 
 
 class Appointment(BaseModel):
@@ -19,7 +16,6 @@ class Appointment(BaseModel):
     mail: str
     phone: Optional[str] = None
     description: Optional[str] = None
-    doctor: Doctor
     start_time: time
 
 
@@ -27,11 +23,17 @@ class PlannerController():
 
     APPOINTMENT_DURATION = timedelta(minutes=30)
 
+    def _naive(self, dt: datetime) -> datetime:
+        """
+        Supprime tzinfo si présent pour travailler avec des datetime naïfs.
+        """
+        return dt if dt.tzinfo is None else dt.replace(tzinfo=None)
+
     def __init__(self, year, path: str = "./planning_json/"):
         self.path = Path(path)
         self.path.mkdir(parents=True, exist_ok=True)
         self.year = year
-        self.planning: Dict[int, Dict[int, Dict[str, List[Appointment]]]] = {}
+        self.planning: Dict[int, Dict[int, List[Appointment]]] = {}
         self._load(year)
 
 
@@ -44,7 +46,7 @@ class PlannerController():
             self.planning[month] = {}
             for day in range(1, num_days + 1):
                 # Initialize an empty list of appointments for each doctor
-                self.planning[month][day] = {doc.value: [] for doc in Doctor}
+                self.planning[month][day] = []
         # Persist the initialized year to disk
         self._save(year)
 
@@ -60,71 +62,62 @@ class PlannerController():
         for month_str, days in data.items():
             month = int(month_str)
             self.planning[month] = {}
-            for day_str, doctors in days.items():
+            for day_str, rdv_list in days.items():
                 day = int(day_str)
-                self.planning[month][day] = {}
-                for doctor_name, rdv_list in doctors.items():
-                    self.planning[month][day][doctor_name] = [
-                        Appointment(
-                            name=item.get("name"),
-                            surname=item.get("surname"),
-                            date=date.fromisoformat(item["date"]),
-                            mail=item["mail"],
-                            phone=item.get("phone"),
-                            description=item.get("description"),
-                            doctor=Doctor(item["doctor"]),
-                            start_time=time.fromisoformat(item["start_time"])
-                        )
-                        for item in rdv_list
-                    ]
+                self.planning[month][day] = [
+                    Appointment(
+                        name=item.get("name"),
+                        surname=item.get("surname"),
+                        date=date.fromisoformat(item["date"]),
+                        mail=item["mail"],
+                        phone=item.get("phone"),
+                        description=item.get("description"),
+                        start_time=time.fromisoformat(item["start_time"])
+                    )
+                    for item in rdv_list
+                ]
 
     def _save(self, year: int):
         file_path = self.path / f"{year}.json"
-        data: Dict[str, Dict[str, Dict[str, List[Dict]]]] = {}
+        data: Dict[str, Dict[str, List[Dict]]] = {}
         for month, days in self.planning.items():
             data[str(month)] = {}
-            for day, doctors in days.items():
-                data[str(month)][str(day)] = {}
-                for doc_name, rdvs in doctors.items():
-                    data[str(month)][str(day)][doc_name] = [
-                        {
-                            "name": rdv.name,
-                            "surname": rdv.surname,
-                            "date": rdv.date.isoformat(),
-                            "mail": rdv.mail,
-                            "phone": rdv.phone,
-                            "description": rdv.description,
-                            "doctor": rdv.doctor.value,
-                            "start_time": rdv.start_time.isoformat()
-                        }
-                        for rdv in rdvs
-                    ]
+            for day in days:
+                rdvs = days[day]
+                data[str(month)][str(day)] = [
+                    {
+                        "name": rdv.name,
+                        "surname": rdv.surname,
+                        "date": rdv.date.isoformat(),
+                        "mail": rdv.mail,
+                        "phone": rdv.phone,
+                        "description": rdv.description,
+                        "start_time": rdv.start_time.isoformat()
+                    }
+                    for rdv in rdvs
+                ]
         with file_path.open("w") as f:
             json.dump(data, f, indent=4)
 
     def add_rdv(self, appointment: Appointment):
         month = appointment.date.month
         day = appointment.date.day
-        doctor_name = appointment.doctor.value
-        self.planning.setdefault(month, {}).setdefault(day, {}).setdefault(doctor_name, [])
-        new_start = datetime.combine(appointment.date, appointment.start_time)
-        new_end = new_start + self.APPOINTMENT_DURATION
-        for existing in self.planning[month][day][doctor_name]:
-            ex_start = datetime.combine(existing.date, existing.start_time)
-            ex_end = ex_start + self.APPOINTMENT_DURATION
+        self.planning.setdefault(month, {}).setdefault(day, [])
+        raw_new_start = datetime.combine(appointment.date, appointment.start_time)
+        new_start = self._naive(raw_new_start)
+        new_end = self._naive(new_start + self.APPOINTMENT_DURATION)
+        for existing in self.planning[month][day]:
+            raw_ex_start = datetime.combine(existing.date, existing.start_time)
+            ex_start = self._naive(raw_ex_start)
+            ex_end = self._naive(ex_start + self.APPOINTMENT_DURATION)
             if not (new_end <= ex_start or new_start >= ex_end):
                 raise ValueError("Overlapping appointment")
-        self.planning[month][day][doctor_name].append(appointment)
+        self.planning[month][day].append(appointment)
         self._save(self.year)
 
     def get_day_rdv(self, date: datetime) -> List[Appointment]:
         """ Return a list of all appointments for the given date across all doctors, sorted by start time. Work-hours : 8:00 to 12:00 and 14:00 to 18:00. """
-        day_planning = self.planning.get(date.month, {}).get(date.day, {})
-        # Flatten appointments from all doctors
-        appts = []
-        for doc_appts in day_planning.values():
-            appts.extend(doc_appts)
-        # Sort by start_time
+        appts = self.planning.get(date.month, {}).get(date.day, [])
         return sorted(appts, key=lambda a: a.start_time)
 
     def get_day_available_timeslots(self, date: datetime) -> List[datetime]:
@@ -135,18 +128,18 @@ class PlannerController():
         slots = []
         slot_duration = self.APPOINTMENT_DURATION
         # Gather booked intervals with fixed duration
-        booked = [
-            (
-                datetime.combine(a.date, a.start_time),
-                datetime.combine(a.date, a.start_time) + slot_duration
-            )
-            for a in self.get_day_rdv(date)
-        ]
+        booked = []
+        for a in self.get_day_rdv(date):
+            raw_bs = datetime.combine(a.date, a.start_time)
+            bs = self._naive(raw_bs)
+            be = self._naive(bs + slot_duration)
+            booked.append((bs, be))
         # Morning slots: 08:00 to 12:00
         current = datetime.combine(date.date(), time(hour=8))
         morning_end = datetime.combine(date.date(), time(hour=12))
         while current + slot_duration <= morning_end:
             next_slot = current + slot_duration
+            # print(next_slot, current, booked)
             if not any(b_start < next_slot and current < b_end for b_start, b_end in booked):
                 slots.append(current)
             current = next_slot
@@ -161,7 +154,6 @@ class PlannerController():
         return slots
 
     def get_week_rdv(self, date: datetime) -> List[List[Appointment]]:
-        # Compute start of week (Monday)
         start = date - timedelta(days=date.weekday())
         week = []
         for i in range(7):
@@ -170,7 +162,6 @@ class PlannerController():
         return week
 
     def get_week_available_timeslots(self, date: datetime) -> List[List[datetime]]:
-        # Compute start of week (Monday)
         start = date - timedelta(days=date.weekday())
         week_slots = []
         for i in range(7):
@@ -214,12 +205,9 @@ class PlannerController():
         """" Delete an appointment from the planning and save the planning. """
         month = appointment.date.month
         day = appointment.date.day
-        doctor_name = appointment.doctor.value
         try:
-            self.planning[month][day][doctor_name].remove(appointment)
+            self.planning[month][day].remove(appointment)
             # Clean up empty containers
-            if not self.planning[month][day][doctor_name]:
-                del self.planning[month][day][doctor_name]
             if not self.planning[month][day]:
                 del self.planning[month][day]
             if not self.planning[month]:
@@ -249,7 +237,6 @@ if __name__ == "__main__":
         mail="alice@example.com",
         phone="555-0001",
         description="Checkup",
-        doctor=Doctor.SMITH,
         duration=timedelta(minutes=45),
         start_time=time(hour=10, minute=0)
     )
@@ -259,7 +246,6 @@ if __name__ == "__main__":
         print(f"Failed to add appointment: {e}")
 
     controller._load(2025)
-    loaded = controller.planning[7][1][Doctor.SMITH.value][0]
 
     # controller.delete_rdv(appt)
 
@@ -305,6 +291,7 @@ if __name__ == "__main__":
     # Test: month appointments and available timeslots for month of test_date
     month_rdv = controller.get_month_rdv(datetime.combine(test_date, time()))
     month_slots = controller.get_month_available_timeslots(datetime.combine(test_date, time()))
+    print(month_slots)
     year = test_date.year
     month = test_date.month
     cal = calendar.monthcalendar(year, month)

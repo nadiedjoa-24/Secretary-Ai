@@ -74,6 +74,8 @@ class API_Client(BaseAIModel):
             return response.output_parsed
         else:
             raise ValueError("No reponse from the API.")
+        
+
 
 
     def tts(self, text: str, filename: str = "output.wav", engine: int = 2) -> str:
@@ -146,7 +148,7 @@ if __name__ == "__main__":
     from pydantic import BaseModel
 
     client = API_Client()
-    audio_ctrl = AUDIO_Controller(device_index=1)
+    audio_ctrl = AUDIO_Controller(device_index=2)
 
     # # Test basic()
     # print("=== Test basic() ===")
@@ -162,18 +164,19 @@ if __name__ == "__main__":
     # parsed = client.parse([{"role": "user", "content": "Que vaut 6 + 3"}], Message)
     # print(parsed)
 
-    # Test TTS avec AUDIO_Controller
-    print("\n=== Test TTS via AUDIO_Controller ===")
-    tts_path = client.tts("Dans le silence doré du matin, un vieux vélo rouillé reposait contre le mur couvert de lierre. Le chant discret d’un merle s’élevait, se mêlant au parfum sucré des fleurs de tilleul. Quelqu’un, quelque part, laissait flotter une mélodie à la guitare, légère comme un souffle de vent.")
-    print(f"tts path : {tts_path}")
-    audio_ctrl.play(tts_path)
-    print(f"TTS généré et joué depuis : {tts_path}")
+    # # Test TTS avec AUDIO_Controller
+    # print("\n=== Test TTS via AUDIO_Controller ===")
+    # tts_path = client.tts("Dans le silence doré du matin, un vieux vélo rouillé reposait contre le mur couvert de lierre.q")
+    # print(f"tts path : {tts_path}")
+    # path = "./audio_recordings/" + tts_path
+    # audio_ctrl.play(path)
+    # print(f"TTS généré et joué depuis : {tts_path}")
 
-    # Test STT avec AUDIO_Controller
-    print("\n=== Test STT via AUDIO_Controller ===")
-    audio_path = audio_ctrl.listen()
-    stt_msg = client.stt(audio_path)
-    print(f"Transcription: {stt_msg.content}")
+    # # Test STT avec AUDIO_Controller
+    # print("\n=== Test STT via AUDIO_Controller ===")
+    # audio_path = audio_ctrl._listen()
+    # stt_msg = client.stt(audio_path)
+    # print(f"Transcription: {stt_msg.content}")
 
 
     # Conversation continue : dit "exit" pour quitter
@@ -181,7 +184,7 @@ if __name__ == "__main__":
     try:
         while True:
             print("Veuillez poser une question après le bip...")
-            conv_audio = audio_ctrl.listen()
+            conv_audio = audio_ctrl._listen()
             conv_input = client.stt(conv_audio)
             content = conv_input.content.strip().lower()
             if content in ("exit", "quit", "stop"):
@@ -193,8 +196,8 @@ if __name__ == "__main__":
             print(f"Réponse AI : {ai_response.content}")
 
             # Synthèse vocale et lecture
-            response_tts_path = client.tts(ai_response.content, output_path="response_tts.mp3")
+            response_tts_path = client.tts(ai_response.content)
             print(f"Fichier TTS généré : {response_tts_path}")
-            audio_ctrl.play(response_tts_path)
+            audio_ctrl.play("./audio_recordings/" + response_tts_path)
     except KeyboardInterrupt:
         print("\nConversation interrompue par l'utilisateur.")
