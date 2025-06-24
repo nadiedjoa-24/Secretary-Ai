@@ -234,7 +234,7 @@ if __name__ == "__main__":
 
     agent = Planner_agent(backend="API")
 
-    agent.planner_controller.add_rdv(appointment=appointment)
+    #agent.planner_controller.add_rdv(appointment=appointment)
 
     # Exécution du test
     agent.reschedule_appointment(appointment)
