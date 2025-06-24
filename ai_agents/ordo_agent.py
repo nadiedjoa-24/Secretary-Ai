@@ -17,12 +17,11 @@ import json
 
 class MedicamentInfo(BaseModel):
     nom: str
-    quantite: str
+    posologie: str
     duree: str
 
 class PatientInfo(BaseModel):
     patient: str
-    medecin: str
     medicaments: List[MedicamentInfo]
 
 class OrdoAgent:
@@ -92,31 +91,39 @@ class OrdoAgent:
         self.audio_ctrl.play(tts_path)
 
     def reconnaitre_voix(self):
-        """Écoute le micro, enregistre, puis transcrit avec l'API_Client."""
-        print("Veuillez parler après le bip...")
+        """
+        Écoute le micro, enregistre, puis transcrit avec l'API_Client.
+        Arrête l'écoute dès que l'utilisateur dit 'c'est tout'.
+        Retourne la transcription complète.
+        """
+        print("Veuillez parler après le bip... (dites 'c'est tout' pour terminer)")
+        full_text = []
+        
         audio_path = self.audio_ctrl.listen()
         msg = self.api_client.stt(audio_path)
         print(f"Transcription : {msg.content}")
-        self.full_transcript.append({"role": "user", "content": msg.content})
-        return msg.content
+            
+        full_text.append(msg.content)
+        transcript = " ".join(full_text)
+        print("Cest fini")
+        return transcript
 
     def generer_ordonnance(self, informations: PatientInfo):
         dossier_ordonnances = os.path.expanduser("~/Desktop/ordonnances")
         os.makedirs(dossier_ordonnances, exist_ok=True)
 
-        if not informations or not informations.patient or not informations.medecin or not informations.medicaments:
+        if not informations or not informations.patient or not informations.medicaments:
             print("❌ Erreur : Informations incomplètes.")
             return
 
         for med in informations.medicaments:
-            if not med.nom or not med.quantite or not med.duree:
+            if not med.nom or not med.posologie or not med.duree:
                 print(f"❌ Erreur : Données incomplètes pour : {med}")
                 return
 
         print("✅ Informations valides. Génération de l'ordonnance...")
 
         patient_nom = informations.patient
-        medecin_nom = informations.medecin
         medicaments = informations.medicaments
 
         fichier_nom = f"ordonnance_{patient_nom.replace(' ', '_')}.pdf"
@@ -143,8 +150,7 @@ class OrdoAgent:
         c.setFont("Helvetica", 12)
         date_ajd = datetime.date.today().strftime("%d/%m/%Y")
         c.drawString(50, hauteur - 80, f"Date : {date_ajd}")
-        c.drawString(50, hauteur - 100, f"Médecin : {medecin_nom}")
-        c.drawString(50, hauteur - 120, f"Patient : {patient_nom}")
+        c.drawString(50, hauteur - 100, f"Patient : {patient_nom}")
 
         c.setFont("Helvetica-Bold", 15)
         c.drawString(50, hauteur - 220, "Médicaments prescrits :")
@@ -152,10 +158,10 @@ class OrdoAgent:
         y_position = hauteur - 250
 
         for med in medicaments:
-            c.drawString(50, y_position, f"- {med.nom} : {med.quantite} pendant {med.duree}")
+            c.drawString(50, y_position, f"- {med.nom} : {med.posologie} pendant {med.duree}")
             y_position -= 20
 
-        c.drawString(350, y_position - 50, "Signature du médecin : ___________")
+        c.drawString(350, y_position - 50, "Signature : ___________")
         c.save()
 
         print(f"📄 Ordonnance générée : {chemin_fichier}")
@@ -228,30 +234,25 @@ class OrdoAgent:
         self.parler("Ordonnance générée avec succès.")
 
     def remplir_ordonnance_auto(self):
-        self.parler("Je suis votre médecin. Veuillez me donner toutes les informations pour l'ordonnance, puis dites 'c'est tout' à la fin.")
+        self.parler("Je suis prêt. Dites toutes les informations pour l'ordonnance, puis dites 'c'est tout' quand vous avez terminé.")
+        self.full_transcript = []
         while True:
             user_text = self.reconnaitre_voix()
             if "c'est tout" in user_text.lower():
                 break
-        infos = self.extraire_infos_ordonnance()
-        if infos:
-            patient = infos.get("patient", "")
-            pathologie = infos.get("pathologie", "")
-            medicaments = infos.get("medicaments", [])
-            info_patient = PatientInfo(
-                patient=patient,
-                medecin=self.medecin_info,
-                medicaments=[
-                    MedicamentInfo(
-                        nom=m.get("nom", ""),
-                        quantite=m.get("posologie", ""),
-                        duree=m.get("durée", "")
-                    ) for m in medicaments
-                ]
+            self.full_transcript.append({"role": "user", "content": user_text})
+
+        try:
+            # Extraction structurée avec parse
+            info_patient = self.api_client.parse(
+                self.ordo_extraction_prompt + self.full_transcript,
+                PatientInfo
             )
+            # Génération de l'ordonnance PDF
             self.generer_ordonnance(info_patient)
             self.parler("Ordonnance générée avec succès.")
-        else:
+        except Exception as e:
+            print("Erreur lors de l'extraction ou de la génération :", e)
             self.parler("Je n'ai pas pu extraire toutes les informations nécessaires.")
 
     def discuter(self):
@@ -266,23 +267,27 @@ class OrdoAgent:
             print(f"Réponse AI : {ai_response.content}")
             self.parler(ai_response.content)
 
-    def extraire_infos_ordonnance(self):
-        messages = self.ordo_extraction_prompt + self.full_transcript
-        response = self.api_client.basic(messages)
+    def extraire_infos_ordonnance(self, transcript: str):
+        """
+        Prend une transcription brute (str) et retourne un PatientInfo structuré.
+        """
+        messages = self.ordo_extraction_prompt + [{"role": "user", "content": transcript}]
         try:
-            infos = json.loads(response.content)
-            return infos
+            info_patient = self.api_client.parse(messages, PatientInfo)
+            return info_patient
         except Exception as e:
             print("Erreur extraction infos ordonnance :", e)
             return None
 
 if __name__ == "__main__":
     agent = OrdoAgent()
-    agent.discuter()
-    transcript = "..."  # Remplacez par la transcription réelle
-    infos = agent.extraire_infos_ordonnance(transcript)
+    print("Veuillez dicter l'ordonnance après le bip.")
+    transcript = agent.reconnaitre_voix()
+    infos = agent.extraire_infos_ordonnance( transcript)
     if infos:
-        patient = infos.get("patient", "")
-        pathologie = infos.get("pathologie", "")
-        medicaments = infos.get("medicaments", [])
-        # medicaments = [{"nom": ..., "posologie": ..., "durée": ...}, ...]
+        print("Patient :", infos.patient)
+        for med in infos.medicaments:
+            print(f"Médicament : {med.nom}, Posologie : {med.posologie}, Durée : {med.duree}")
+        agent.generer_ordonnance(infos)
+    else:
+        print("Impossible d'extraire les informations de l'ordonnance.")

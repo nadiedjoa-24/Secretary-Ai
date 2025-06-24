@@ -17,8 +17,8 @@ class AUDIO_Controller:
         self.rate = 16000
         self.channels = 1
         self.chunk = 1024
-        self.threshold = 60.0  
-        self.silence_duration = 5.0  
+        self.threshold = 45.0  
+        self.silence_duration = 6
         self.alpha = 0.2  
         self.noise_calibration_chunks = 30   
         self.threshold_factor = 0.8          
