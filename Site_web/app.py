@@ -24,12 +24,14 @@ def auto_sort():
         for email in unseen_emails:
             date = getattr(email, "date", "Date inconnue")
             summary = mail_agent.summarize_email(email)
+            sender = getattr(email, "sender", "Expéditeur inconnu")
             if not summary or summary.strip() == "":
                 summary = "Ce message ne peut pas être résumé."
             mails.append({
                 "id": email.id,
                 "date": date,
-                "summary": summary
+                "summary": summary,
+                "sender": sender
             })
 
     # Déplacement manuel
@@ -45,12 +47,14 @@ def auto_sort():
         for email in unseen_emails:
             date = getattr(email, "date", "Date inconnue")
             summary = mail_agent.summarize_email(email)
+            sender = getattr(email, "sender", "Expéditeur inconnu")
             if not summary or summary.strip() == "":
                 summary = "Ce message ne peut pas être résumé."
             mails.append({
                 "id": email.id,
                 "date": date,
-                "summary": summary
+                "summary": summary,
+                "sender": sender
             })
 
     # Tri automatique

@@ -165,6 +165,7 @@
     <div class="centered-container">
         {% for mail in mails %}
         <div class="mail-card">
+            <b>Expéditeur :</b> {{ mail.sender }}<br>
             <b>Date :</b> {{ mail.date }}<br>
             <b>Résumé :</b> {{ mail.summary }}<br>
             <form method="post">
