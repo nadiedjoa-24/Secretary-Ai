@@ -93,20 +93,27 @@ class OrdoAgent:
     def reconnaitre_voix(self):
         """
         Écoute le micro, enregistre, puis transcrit avec l'API_Client.
-        Arrête l'écoute dès que l'utilisateur dit 'c'est tout'.
-        Retourne la transcription complète.
+        Retourne la transcription complète, ou rien si stop_flag est activé.
         """
-        print("Veuillez parler après le bip... (dites 'c'est tout' pour terminer)")
-        full_text = []
-        
+        import Site_web.ordonnance as ordonnance_py  # pour accéder à stop_flag
+        print("Veuillez parler après le bip... (cliquez sur Arrêter pour stopper)")
+        if hasattr(ordonnance_py, "stop_flag") and ordonnance_py.stop_flag.is_set():
+            ordonnance_py.stop_flag.clear()
+            print("Arrêt demandé par le site (avant écoute).")
+            return ""
         audio_path = self.audio_ctrl.listen()
         msg = self.api_client.stt(audio_path)
         print(f"Transcription : {msg.content}")
-            
-        full_text.append(msg.content)
-        transcript = " ".join(full_text)
-        print("Cest fini")
-        return transcript
+        # Si le flag est activé juste après l'écoute
+        if hasattr(ordonnance_py, "stop_flag") and ordonnance_py.stop_flag.is_set():
+            ordonnance_py.stop_flag.clear()
+            print("Arrêt demandé par le site (après écoute).")
+            return msg.content
+        # Arrêt vocal classique
+        if "c'est tout" in msg.content.lower() or "stop" in msg.content.lower():
+            print("Arrêt vocal détecté.")
+            return msg.content
+        return msg.content
 
     def generer_ordonnance(self, informations: PatientInfo):
         dossier_ordonnances = os.path.expanduser("~/Desktop/ordonnances")

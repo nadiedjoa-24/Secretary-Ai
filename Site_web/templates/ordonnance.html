@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Générer une ordonnance</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #f4f4f4;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 80px auto;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(44, 83, 100, 0.13);
+            padding: 40px 32px 32px 32px;
+            text-align: center;
+        }
+
+        button {
+            background: linear-gradient(90deg, #36d1c4 0%, #5b86e5 100%);
+            color: #fff;
+            border: none;
+            padding: 16px 38px;
+            border-radius: 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: background 0.2s, transform 0.2s;
+            box-shadow: 0 2px 8px rgba(44, 83, 100, 0.15);
+        }
+
+        button:hover {
+            background: linear-gradient(90deg, #5b86e5 0%, #36d1c4 100%);
+            transform: translateY(-2px) scale(1.03);
+        }
+
+        .flash {
+            margin: 18px 0;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 1.1em;
+        }
+
+        .flash-info {
+            background: #2c5364;
+            color: #fff;
+        }
+
+        .flash-success {
+            background: #36d1c4;
+            color: #fff;
+        }
+
+        .flash-danger {
+            background: #e57373;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Générer une ordonnance vocale</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        <form method="post">
+            <button type="submit" id="start-btn">Démarrer la dictée et générer l'ordonnance</button>
+            <button type="button" id="stop-btn" style="margin-left:20px;background:#e57373;">Arrêter
+                l'enregistrement</button>
+        </form>
+        <script>
+            document.getElementById('stop-btn').onclick = function () {
+                fetch('/stop', { method: 'POST' });
+                alert("Demande d'arrêt envoyée.");
+            };
+        </script>
+    </div>
+</body>
+
+</html>
