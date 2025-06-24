@@ -71,7 +71,16 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         {% for category, message in messages %}
+        {% if category == "file" %}
+        <div class="flash flash-success">
+            <a href="{{ url_for('download_ordonnance', filename=message.split(': ')[1]) }}"
+                style="color:#fff;text-decoration:underline;" download>
+                Télécharger l'ordonnance générée ({{ message.split(': ')[1] }})
+            </a>
+        </div>
+        {% else %}
         <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endif %}
         {% endfor %}
         {% endif %}
         {% endwith %}

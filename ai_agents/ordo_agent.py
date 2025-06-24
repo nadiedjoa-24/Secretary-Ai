@@ -116,7 +116,9 @@ class OrdoAgent:
         return msg.content
 
     def generer_ordonnance(self, informations: PatientInfo):
-        dossier_ordonnances = os.path.expanduser("~/Desktop/ordonnances")
+        # Calcule le chemin du dossier 'ordonnances' au même niveau que 'ai_agents'
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # remonte d'un cran depuis ai_agents
+        dossier_ordonnances = os.path.join(base_dir, "ordonnances")
         os.makedirs(dossier_ordonnances, exist_ok=True)
 
         if not informations or not informations.patient or not informations.medicaments:
@@ -172,6 +174,7 @@ class OrdoAgent:
         c.save()
 
         print(f"📄 Ordonnance générée : {chemin_fichier}")
+        return chemin_fichier  # <-- Ajoute ce return
 
     def remplir_ordonnance_par_questions(self):
         # Présentation claire à l'utilisateur
