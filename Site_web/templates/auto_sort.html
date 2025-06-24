@@ -5,40 +5,45 @@
     <title>Gestion des mails</title>
     <style>
         body {
-            background: #003c76;
-            font-family: Arial, sans-serif;
-            color: #044;
+            background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #f4f4f4;
             min-height: 100vh;
             margin: 0;
             padding: 0;
         }
 
         h1 {
-            color: rgb(255, 255, 255);
+            color: #fff;
             text-align: center;
-            margin-top: 30px;
+            margin-top: 40px;
+            letter-spacing: 2px;
+            font-size: 2.5em;
+            font-weight: 700;
         }
 
         .refresh-btn {
-            background: #35bcc0;
+            background: linear-gradient(90deg, #36d1c4 0%, #5b86e5 100%);
             color: #fff;
             border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            font-size: 1.1em;
+            padding: 14px 32px;
+            border-radius: 30px;
+            font-size: 1.15em;
             cursor: pointer;
-            margin: 20px auto 30px auto;
-            display: block;
-            transition: background 0.2s;
+            margin: 20px 10px 30px 10px;
+            display: inline-block;
+            transition: background 0.2s, transform 0.2s;
+            box-shadow: 0 2px 8px rgba(44, 83, 100, 0.15);
         }
 
         .refresh-btn:hover {
-            background: #00bfae;
+            background: linear-gradient(90deg, #5b86e5 0%, #36d1c4 100%);
+            transform: translateY(-2px) scale(1.03);
         }
 
         .loader {
             border: 8px solid #e0f7fa;
-            border-top: 8px solid #00bfae;
+            border-top: 8px solid #36d1c4;
             border-radius: 50%;
             width: 60px;
             height: 60px;
@@ -56,6 +61,78 @@
                 transform: rotate(360deg);
             }
         }
+
+        .centered-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .mail-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(44, 83, 100, 0.13);
+            padding: 28px 32px 20px 32px;
+            margin: 24px 0;
+            width: 90%;
+            max-width: 600px;
+            text-align: left;
+            transition: box-shadow 0.2s;
+        }
+
+        .mail-card:hover {
+            box-shadow: 0 8px 32px rgba(44, 83, 100, 0.22);
+        }
+
+        .mail-card b {
+            color: #36d1c4;
+        }
+
+        .mail-card form {
+            margin-top: 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mail-card select,
+        .mail-card button {
+            border-radius: 8px;
+            border: none;
+            padding: 7px 14px;
+            font-size: 1em;
+        }
+
+        .mail-card select {
+            background: #e0f7fa;
+            color: #2c5364;
+        }
+
+        .mail-card button {
+            background: #36d1c4;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .mail-card button:hover {
+            background: #5b86e5;
+        }
+
+        .success-message {
+            color: #36d1c4;
+            text-align: center;
+            font-size: 1.1em;
+            margin-top: 20px;
+        }
+
+        .no-mail {
+            text-align: center;
+            color: #fff;
+            margin-top: 40px;
+            font-size: 1.2em;
+        }
     </style>
     <script>
         function showLoader() {
@@ -66,35 +143,33 @@
 
 <body>
     <h1>Gestion des mails</h1>
-    <div style="text-align:center;">
+    <div class="centered-container">
         <form action="/" method="get" style="display:inline;" onsubmit="showLoader()">
             <input type="hidden" name="action" value="summarize">
             <button type="submit" class="refresh-btn">Résumer les mails</button>
         </form>
         <form action="/" method="post" style="display:inline;" onsubmit="showLoader()">
-            <button type="submit" class="refresh-btn" name="auto_sort" value="1">Tri
-                automatique
-            </button>
+            <button type="submit" class="refresh-btn" name="auto_sort" value="1">Tri automatique</button>
         </form>
     </div>
     <div id="loader" class="loader"></div>
     {% if message %}
-    <p style="color:green;">{{ message }}</p>
+    <div class="success-message">{{ message }}</div>
     {% endif %}
     {% if messages %}
     {% for msg in messages %}
-    <p style="color:green;">{{ msg }}</p>
+    <div class="success-message">{{ msg }}</div>
     {% endfor %}
     {% endif %}
     {% if mode == "summarize" and mails and mails|length > 0 %}
-    <ul>
+    <div class="centered-container">
         {% for mail in mails %}
-        <li>
+        <div class="mail-card">
             <b>Date :</b> {{ mail.date }}<br>
             <b>Résumé :</b> {{ mail.summary }}<br>
-            <form method="post" style="margin-top:10px;">
+            <form method="post">
                 <input type="hidden" name="email_id" value="{{ mail.id }}">
-                <label>Souhaitez-vous déplacer ce mail ?</label>
+                <label>Déplacer ce mail vers :</label>
                 <select name="target_folder">
                     {% for folder in folders %}
                     <option value="{{ folder }}">{{ folder }}</option>
@@ -102,11 +177,11 @@
                 </select>
                 <button type="submit">Déplacer</button>
             </form>
-        </li>
+        </div>
         {% endfor %}
-    </ul>
+    </div>
     {% elif mode == "summarize" %}
-    <p>Vous êtes bien à jour</p>
+    <div class="no-mail">Vous êtes bien à jour</div>
     {% endif %}
 </body>
 
