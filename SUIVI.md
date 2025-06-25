@@ -115,3 +115,20 @@
 
 ## Mardi 17 juin 2025
 - (Agshay, Antoine et Yifan) : Finalisation de l'affiche
+
+## Lundi 23 juin 2025
+- (Agshay) : Conception de l'interface pour l'agent ordonnance
+- (Yifan) : Conception du site web
+- (Théophile, Yanic) : Nettoyage du git 
+- (Théophile) : Optimisation du de l'agent vocal pour la génération d'ordonnance
+
+## Mardi 24 juin 2025
+-(Yanic) : Finalisation de l'agent Planning
+-(Agshay, Antoine) : Création de l'interface Accueil du projet 
+-(Yifan, Théophile) : Finalisation de l'agent vocal pour la génération d'ordonnance  
+
+## Mercredi 25 juin 2025
+-(Yifan, Antoine) : Mise en lien des interfaces agent et de l'interface Accueil
+-(Théophile) : Optimisation de l'agent vocal pour la génération d'ordonnance
+-(Yanic) : Finalisation de l'agent Planning et conception de l'interface pour l'agent Planning
+-(Agshay) : Amélioration visuelle de l'interface 
