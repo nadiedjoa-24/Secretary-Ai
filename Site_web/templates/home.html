@@ -11,6 +11,30 @@
             min-height: 100vh;
             margin: 0;
             padding: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Ajout du fond d'image transparent */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            background: url('https://media.istockphoto.com/id/1404179486/photo/anesthetist-working-in-operating-theatre-wearing-protecive-gear-checking-monitors-while.jpg?s=612x612&w=0&k=20&c=gecZ0b-nDIuMOvRIt8Qyam-eSx6RBdUzn5yDh0nNEvM=') center center/cover no-repeat;
+            opacity: 0.18;
+        }
+
+        .container,
+        .credits {
+            position: relative;
+            z-index: 1;
         }
 
         .container {
@@ -69,15 +93,26 @@
 </head>
 
 <body>
+    <div
+        style="position:fixed;top:30px;left:30px;font-size:1em;color:#b2ebf2;opacity:0.7;letter-spacing:1px;z-index:2;pointer-events:none;">
+        Votre secrétaire à portée de main
+    </div>
+    <div
+        style="position:fixed;bottom:30px;right:30px;font-size:1em;color:#5b86e5;opacity:0.7;letter-spacing:1px;z-index:2;pointer-events:none;text-align:right;">
+        L’IA qui simplifie votre quotidien
+    </div>
     <div class="container">
         <h1>Bienvenue sur Secretary AI</h1>
         <a href="{{ url_for('ordonnance') }}"><button class="main-btn">Générer une ordonnance</button></a>
         <a href="{{ url_for('auto_sort') }}"><button class="main-btn">Gérer les mails</button></a>
+        <div style="font-size:0.98em; color:#90caf9; margin:18px 0 0 0;">
+            Simplifiez votre quotidien professionnel avec l’IA.
+        </div>
         <div class="credits">
-            <div><strong>Fait par :</strong> Agshay Nadanakumar, Nadiedjoa Théophile, Ollivier Antoine, Wang Yifan,
-                ROTHLINGSHOFER Yanic
+            <div><strong>Fait par :</strong> Nadanakumar Agshay, Nadiedjoa Théophile, Ollivier Antoine, Wang Yifan,
+                Rothlingshofer Yanic
             </div>
-            <div><strong>Encadré par :</strong> Pujol Thomas, Gomez Jean Sebastien</div>
+            <div><strong>Encadré par :</strong> Pujol Thomas, Gomez Jean-Sebastien</div>
         </div>
     </div>
 </body>
