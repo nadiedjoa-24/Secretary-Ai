@@ -15,6 +15,7 @@ from typing import List
 from pydantic import BaseModel
 import json
 
+
 class MedicamentInfo(BaseModel):
     nom: str
     posologie: str
@@ -281,23 +282,234 @@ class OrdoAgent:
         """
         Prend une transcription brute (str) et retourne un PatientInfo structuré.
         """
+        print(f"📝 Transcription à analyser : {transcript}")
+        
         messages = self.ordo_extraction_prompt + [{"role": "user", "content": transcript}]
         try:
-            info_patient = self.api_client.parse(messages, PatientInfo)
-            return info_patient
+            # Utilise basic() au lieu de parse() pour voir la réponse brute
+            response = self.api_client.basic([Message(role=msg["role"], content=msg["content"]) for msg in messages])
+            print(f"🤖 Réponse IA brute : {response.content}")
+            
+            # Parse manuellement le JSON
+            import json
+            try:
+                json_data = json.loads(response.content)
+                print(f"✅ JSON parsé : {json_data}")
+                
+                # Crée les objets manuellement
+                medicaments = []
+                for med_data in json_data.get("medicaments", []):
+                    medicaments.append(MedicamentInfo(
+                        nom=med_data.get("nom", ""),
+                        posologie=med_data.get("posologie", ""),
+                        duree=med_data.get("durée", med_data.get("duree", ""))  # Gère les deux orthographes
+                    ))
+                
+                info_patient = PatientInfo(
+                    patient=json_data.get("patient", ""),
+                    medicaments=medicaments
+                )
+                
+                print(f"✅ Objet PatientInfo créé : {info_patient}")
+                return info_patient
+                
+            except json.JSONDecodeError as e:
+                print(f"❌ Erreur JSON : {e}")
+                print(f"Contenu reçu : {response.content}")
+                return None
+                
         except Exception as e:
-            print("Erreur extraction infos ordonnance :", e)
+            print(f"❌ Erreur extraction infos ordonnance : {e}")
             return None
+
+    def afficher_confirmation(self, informations: PatientInfo):
+        """Affiche les informations extraites pour confirmation"""
+        print("\n" + "="*60)
+        print("CONFIRMATION DES INFORMATIONS EXTRAITES")
+        print("="*60)
+        print(f"Patient : {informations.patient}")
+        print("\nMédicaments prescrits :")
+        
+        for i, med in enumerate(informations.medicaments, 1):
+            print(f"  {i}. Nom : {med.nom}")
+            print(f"     Posologie : {med.posologie}")
+            print(f"     Durée : {med.duree}")
+            print()
+        
+        print("="*60)
+        print("Veuillez confirmer ces informations en répondant 'oui' ou 'non' à l'oral.")
+        print("="*60)
+
+    def reconnaitre_voix_simple(self):
+        """Version simplifiée de reconnaissance vocale pour les confirmations"""
+        try:
+            audio_path = self.audio_ctrl._listen()
+            msg = self.api_client.stt(audio_path)
+            print(f"Réponse entendue : {msg.content}")
+            return msg.content
+        except Exception as e:
+            print(f"Erreur lors de la reconnaissance vocale : {e}")
+            return ""
+
+    def demander_confirmation_orale(self):
+        """Demande une confirmation orale et retourne True pour oui, False pour non, ou la correction directement"""
+        print("En attente de votre réponse orale...")
+        reponse = self.reconnaitre_voix_simple()
+        
+        if reponse:
+            reponse_lower = reponse.lower().strip()
+            
+            # Vérifie si c'est une correction directe (contient des mots-clés de correction)
+            mots_correction = ["il y a", "deux l", "corriger", "modifier", "nom de famille", "prénom", "changer"]
+            est_correction = any(mot in reponse_lower for mot in mots_correction)
+            
+            if est_correction:
+                print(f"Correction détectée directement : {reponse}")
+                return reponse  # Retourne la correction au lieu de True/False
+            elif "oui" in reponse_lower or "yes" in reponse_lower or "ok" in reponse_lower:
+                return True
+            elif "non" in reponse_lower or "no" in reponse_lower:
+                return False
+        
+        # Si pas de réponse claire, redemander
+        print("Je n'ai pas compris. Veuillez dire 'oui' ou 'non'.")
+        return self.demander_confirmation_orale()
+
+    def traiter_correction_directe(self, informations: PatientInfo, correction_texte: str):
+        """Traite une correction donnée directement lors de la confirmation"""
+        print(f"Traitement de la correction : {correction_texte}")
+        
+        # Utilise le même système que corriger_informations mais avec une seule correction
+        correction_prompt = [
+            {
+                "role": "system",
+                "content": (
+                    "Vous devez corriger les informations d'une ordonnance selon la correction demandée.\n"
+                    "Appliquez EXACTEMENT la correction demandée et retournez le JSON corrigé.\n"
+                    "RÈGLES DE CORRECTION :\n"
+                    "- Si on dit 'il y a deux L à [nom]', ajoutez un L au nom mentionné\n"
+                    "- Si on dit 'le nom est [nouveau_nom]', remplacez par le nouveau nom\n"
+                    "- Si on dit 'corriger [ancien] par [nouveau]', remplacez ancien par nouveau\n"
+                    "- Si on dit 'modifier [élément]', analysez le contexte pour comprendre la modification\n\n"
+                    "Format de réponse JSON STRICT :\n"
+                    "{\n"
+                    "  \"patient\": \"\",\n"
+                    "  \"pathologie\": \"\",\n"
+                    "  \"medicaments\": [\n"
+                    "    {\"nom\": \"\", \"posologie\": \"\", \"durée\": \"\"}\n"
+                    "  ]\n"
+                    "}\n"
+                )
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"INFORMATIONS ACTUELLES :\n"
+                    f"Patient : {informations.patient}\n"
+                    f"Médicaments : "
+                    + ", ".join([f"{med.nom} ({med.posologie} pendant {med.duree})" for med in informations.medicaments])
+                    + f"\n\nCORRECTION À APPLIQUER :\n{correction_texte}\n\n"
+                    + "EXEMPLE : Si on dit 'il y a deux L au nom de famille Olivier', "
+                    + "le nom 'Antoine Olivier' doit devenir 'Antoine Ollivier'.\n"
+                    + "Appliquez maintenant cette correction et retournez le JSON corrigé."
+                )
+            }
+        ]
+        
+        try:
+            response = self.api_client.basic([Message(role=msg["role"], content=msg["content"]) for msg in correction_prompt])
+            print(f"🔧 Réponse correction : {response.content}")
+            
+            # Parse le JSON corrigé
+            import json
+            json_data = json.loads(response.content)
+            
+            # Crée les objets corrigés
+            medicaments_corriges = []
+            for med_data in json_data.get("medicaments", []):
+                medicaments_corriges.append(MedicamentInfo(
+                    nom=med_data.get("nom", ""),
+                    posologie=med_data.get("posologie", ""),
+                    duree=med_data.get("durée", med_data.get("duree", ""))
+                ))
+            
+            nouvelles_infos = PatientInfo(
+                patient=json_data.get("patient", ""),
+                medicaments=medicaments_corriges
+            )
+            
+            print("✅ Correction appliquée avec succès.")
+            return nouvelles_infos
+            
+        except Exception as e:
+            print(f"❌ Erreur lors de la correction : {e}")
+            return informations
 
 if __name__ == "__main__":
     agent = OrdoAgent()
-    print("Veuillez dicter l'ordonnance après le bip.")
-    transcript = agent.reconnaitre_voix()
-    infos = agent.extraire_infos_ordonnance( transcript)
-    if infos:
-        print("Patient :", infos.patient)
-        for med in infos.medicaments:
-            print(f"Médicament : {med.nom}, Posologie : {med.posologie}, Durée : {med.duree}")
-        agent.generer_ordonnance(infos)
-    else:
-        print("Impossible d'extraire les informations de l'ordonnance.")
+    
+    while True:  # Boucle principale pour permettre de recommencer
+        print("Veuillez dicter l'ordonnance après le bip.")
+        transcript = agent.reconnaitre_voix()
+        
+        print(f"📝 Transcription reçue : '{transcript}'")
+        
+        infos = agent.extraire_infos_ordonnance(transcript)
+        
+        # Vérification des informations extraites
+        if infos and infos.patient and infos.medicaments:
+            # Vérification que tous les médicaments ont les infos complètes
+            medicaments_complets = True
+            for med in infos.medicaments:
+                if not med.nom or not med.posologie or not med.duree:
+                    medicaments_complets = False
+                    break
+            
+            if medicaments_complets:
+                # Boucle de confirmation et correction
+                while True:
+                    # Affichage de la confirmation
+                    agent.afficher_confirmation(infos)
+                    
+                    # Demande de confirmation orale
+                    confirmation = agent.demander_confirmation_orale()
+                    
+                    if confirmation == True:
+                        print("✅ Informations confirmées. Génération de l'ordonnance...")
+                        agent.generer_ordonnance(infos)
+                        print("🎉 Ordonnance générée avec succès ! Programme terminé.")
+                        exit()
+                    elif confirmation == False:
+                        print("❌ Veuillez dire les corrections nécessaires.")
+                        infos = agent.corriger_informations(infos)
+                    elif isinstance(confirmation, str):
+                        # C'est une correction directe
+                        print("🔧 Correction directe détectée.")
+                        infos = agent.traiter_correction_directe(infos, confirmation)
+                    # Continue la boucle pour redemander confirmation
+            else:
+                print("❌ Informations de médicaments incomplètes (posologie ou durée manquante).")
+                print("Voulez-vous recommencer la dictée ? (Dites 'oui' pour recommencer ou 'non' pour arrêter)")
+                
+                reponse = agent.reconnaitre_voix_simple()
+                if reponse and ("non" in reponse.lower() or "stop" in reponse.lower() or "arrêt" in reponse.lower()):
+                    print("Programme arrêté.")
+                    break
+                else:
+                    print("🔄 Recommençons la dictée...")
+                    continue  # Recommence la boucle principale
+        else:
+            print("❌ Impossible d'extraire les informations de l'ordonnance ou patient manquant.")
+            if infos:
+                print(f"Patient détecté : '{infos.patient}'")
+                print(f"Nombre de médicaments : {len(infos.medicaments) if infos.medicaments else 0}")
+            
+            print("Voulez-vous recommencer la dictée ? (Dites 'oui' pour recommencer ou 'non' pour arrêter)")
+            
+            reponse = agent.reconnaitre_voix_simple()
+            if reponse and ("non" in reponse.lower() or "stop" in reponse.lower() or "arrêt" in reponse.lower()):
+                print("Programme arrêté.")
+                break
+            else:
+                print("🔄 Recommençons la dictée...")
+                continue  # Recommence la boucle principale
