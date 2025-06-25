@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Accueil - Secrétaire IA</title>
+    <title>Accueil - Secretary AI</title>
     <style>
         body {
             background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
@@ -40,20 +40,45 @@
             box-shadow: 0 2px 8px rgba(44, 83, 100, 0.15);
             display: block;
             width: 100%;
+            text-decoration: none;
         }
 
         .main-btn:hover {
             background: linear-gradient(90deg, #5b86e5 0%, #36d1c4 100%);
             transform: translateY(-2px) scale(1.03);
         }
+
+        /* Ajouté pour enlever le soulignement des liens autour des boutons */
+        a {
+            text-decoration: none;
+        }
+
+        .credits {
+            margin-top: 40px;
+            font-size: 0.95em;
+            color: #cfd8dc;
+            background: rgba(44, 83, 100, 0.13);
+            border-radius: 10px;
+            padding: 18px 10px 10px 10px;
+        }
+
+        .credits strong {
+            color: #fff;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1>Bienvenue sur Secrétaire IA</h1>
+        <h1>Bienvenue sur Secretary AI</h1>
         <a href="{{ url_for('ordonnance') }}"><button class="main-btn">Générer une ordonnance</button></a>
         <a href="{{ url_for('auto_sort') }}"><button class="main-btn">Gérer les mails</button></a>
+        <div class="credits">
+            <div><strong>Fait par :</strong> Agshay Nadanakumar, Nadiedjoa Théophile, Ollivier Antoine, Wang Yifan,
+                ROTHLINGSHOFER Yanic
+            </div>
+            <div><strong>Encadré par :</strong> Pujol Thomas, Gomez Jean Sebastien</div>
+        </div>
     </div>
 </body>
 

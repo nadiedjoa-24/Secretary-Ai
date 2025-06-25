@@ -17,7 +17,7 @@
   | Développement appli    | Yannic & Agshay                      |
 
 ## Mardi 25 février 2025
-- Entretien avec une secrétaire :
+- Entretien avec une secrétaire (obtenu grâce à notre encadrant Artishow) :
   - Rencontre peu productive
   - La personne s'est montrée réticente.
   - Analyse : Mauvais choix d'interlocuteur – une secrétaire pourrait percevoir notre projet comme une menace pour son emploi alors qu'il vise à l'aider en automatisant les tâches répétitives
@@ -26,10 +26,13 @@
 - (Yanic) : Création d'un planning pour les rdv avec des données spécifiées
 - (Yanic & Agshay) : Création d'un AI_Agent qui donne des ordonnances
 - (Yifan & Théophile) : Début de la mise en place de Speech-to-text
+- (Antoine) : Se renseigne sur les modèles text-to-speech qui sont utilisables
 
 ## Mardi 18 mars 2025
 - (Yifan) : Implémentation de LLaMA sur GPU
 - (Antoine) : Création d'un premier modèle text-to-speech en utilisant pyttsx3 ou gtts
+- (Agshay & Yanic) : Developpement de l'agent ordonnances
+- (Théophile) : Developpement modèles speech_to_text
 
 ## Mardi 25 mars 2025
 - (Yifan) : Implémentation de Whispers pour la voix de l'IA
@@ -51,6 +54,7 @@
 - (Yifan) : Mise en place de Mistral pour répondre aux clients + documentation API à distance
 - (Agshay) : Test de speech_to_text sur GPU avec Mistral et Whispers
 - (Yanic) : Mise en place d'un script permettant de mettre en serveur un bot AI sur le GPU à distance
+- (Antoine) : Documentation TTS et STT
 
 ## Mardi 15 avril 2025
 - (Yifan) : Planning + tentative de relier les scripts avec le bot à distance
@@ -115,3 +119,20 @@
 
 ## Mardi 17 juin 2025
 - (Agshay, Antoine et Yifan) : Finalisation de l'affiche
+
+## Lundi 23 juin 2025
+- (Agshay) : Conception de l'interface pour l'agent ordonnance
+- (Yifan) : Conception du site web
+- (Théophile, Yanic) : Nettoyage du git 
+- (Théophile) : Optimisation du de l'agent vocal pour la génération d'ordonnance
+
+## Mardi 24 juin 2025
+- (Yanic) : Finalisation de l'agent Planning
+- (Agshay, Antoine) : Création de l'interface Accueil du projet 
+- (Yifan, Théophile) : Finalisation de l'agent vocal pour la génération d'ordonnance  
+
+## Mercredi 25 juin 2025
+- (Yifan, Antoine) : Mise en lien des interfaces agent et de l'interface Accueil
+- (Théophile) : Optimisation de l'agent vocal pour la génération d'ordonnance
+- (Yanic) : Finalisation de l'agent Planning et conception de l'interface pour l'agent Planning
+- (Agshay) : Amélioration visuelle de l'interface 

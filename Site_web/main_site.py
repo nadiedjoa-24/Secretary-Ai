@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, session
 import os
 import sys
 import threading
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from ai_agents.ordo_agent import OrdoAgent
+from ai_agents.ordo_agent import OrdoAgent, PatientInfo
 from main.agents.email_agent.mail_agent.mail_agent import Mail_Agent
 
 app = Flask(__name__)
@@ -20,22 +20,109 @@ def home():
 # --- Ordonnance ---
 @app.route("/ordonnance", methods=["GET", "POST"])
 def ordonnance():
+    agent = OrdoAgent()
     if request.method == "POST":
-        agent = OrdoAgent()
-        flash("Veuillez dicter l'ordonnance après le bip...", "info")
-        transcript = agent.reconnaitre_voix()
-        infos = agent.extraire_infos_ordonnance(transcript)
-        if infos:
-            chemin_pdf = agent.generer_ordonnance(infos)
-            if chemin_pdf:
-                flash("Ordonnance générée avec succès !", "success")
-                flash(f"Fichier généré : {os.path.basename(chemin_pdf)}", "file")
+        if "step" not in session:
+            flash("Veuillez dicter l'ordonnance après le bip...", "info")
+            transcript = agent.reconnaitre_voix()
+            infos = agent.extraire_infos_ordonnance(transcript)
+            if infos and infos.patient and infos.medicaments:
+                medicaments_complets = all(med.nom and med.posologie and med.duree for med in infos.medicaments)
+                confirmation_text = get_confirmation_text(infos)
+                if medicaments_complets:
+                    # Affiche la confirmation sur le site
+                    agent.afficher_confirmation(infos)
+                    # Demande confirmation orale (micro)
+                    confirmation = agent.demander_confirmation_orale()
+                    if confirmation is True:
+                        chemin_pdf = agent.generer_ordonnance(infos)
+                        if chemin_pdf:
+                            flash("✅ Ordonnance générée avec succès !", "success")
+                            flash(f"{os.path.basename(chemin_pdf)}", "file")
+                        else:
+                            flash("Erreur lors de la génération du fichier.", "danger")
+                        # Propose de recommencer ou d'arrêter après génération
+                        session["step"] = "retry"
+                        session["infos"] = infos.model_dump()
+                        return render_template(
+                            "ordonnance.html",
+                            infos=infos,
+                            retry="after_success",
+                            confirmation=False,
+                            confirmation_text=confirmation_text
+                        )
+                    elif confirmation is False:
+                        flash("Vous avez demandé une correction. Veuillez recommencer la dictée.", "info")
+                        session["step"] = "retry"
+                        session["infos"] = infos.model_dump()
+                        return render_template(
+                            "ordonnance.html",
+                            infos=infos,
+                            retry=True,
+                            confirmation=False,
+                            confirmation_text=confirmation_text
+                        )
+                    else:
+                        flash("Réponse non comprise. Veuillez recommencer la dictée.", "danger")
+                        session["step"] = "retry"
+                        session["infos"] = infos.model_dump()
+                        return render_template(
+                            "ordonnance.html",
+                            infos=infos,
+                            retry=True,
+                            confirmation=False,
+                            confirmation_text=confirmation_text
+                        )
+                else:
+                    flash("❌ Informations de médicaments incomplètes (posologie ou durée manquante).", "danger")
+                    flash("Voulez-vous recommencer la dictée ? (Dites 'oui' pour recommencer ou 'non' pour arrêter)", "info")
+                    session["step"] = "retry"
+                    session["infos"] = infos.model_dump()
+                    return render_template(
+                        "ordonnance.html",
+                        infos=infos,
+                        retry=True,
+                        confirmation=False,
+                        confirmation_text=confirmation_text
+                    )
             else:
-                flash("Erreur lors de la génération du fichier.", "danger")
-        else:
-            flash("Impossible d'extraire les informations de l'ordonnance.", "danger")
-        return redirect(url_for("ordonnance"))
-    return render_template("ordonnance.html")
+                flash("❌ Impossible d'extraire les informations de l'ordonnance ou patient manquant.", "danger")
+                flash("Voulez-vous recommencer la dictée ? (Dites 'oui' pour recommencer ou 'non' pour arrêter)", "info")
+                session["step"] = "retry"
+                session["infos"] = infos.model_dump() if infos else None
+                return render_template(
+                    "ordonnance.html",
+                    infos=infos,
+                    retry=True,
+                    confirmation=False,
+                    confirmation_text=None
+                )
+
+        # 2. Gestion de l'étape "retry"
+        elif session.get("step") == "retry":
+            if request.form.get("retry") == "oui":
+                session.pop("step", None)
+                session.pop("infos", None)
+                return redirect(url_for("ordonnance"))
+            elif request.form.get("retry") == "non":
+                flash("Programme arrêté.", "danger")
+                session.pop("step", None)
+                session.pop("infos", None)
+                return redirect(url_for("ordonnance"))
+            else:
+                infos = PatientInfo.parse_obj(session["infos"]) if session.get("infos") else None
+                confirmation_text = get_confirmation_text(infos) if infos else None
+                return render_template(
+                    "ordonnance.html",
+                    infos=infos,
+                    retry=True,
+                    confirmation=False,
+                    confirmation_text=confirmation_text
+                )
+    # GET : affichage initial
+    session.pop("step", None)
+    session.pop("infos", None)
+    return render_template("ordonnance.html", infos=None, confirmation=False, retry=False, confirmation_text=None)
 
 @app.route("/stop", methods=["POST"])
 def stop_recording():
@@ -96,6 +183,25 @@ def auto_sort():
                 "sender": sender
             })
     return render_template("auto_sort.html", mails=mails, folders=folders, mode=mode, message=message, messages=messages)
+
+def get_confirmation_text(infos):
+    if not infos:
+        return ""
+    lines = []
+    lines.append("\n" + "="*60)
+    lines.append("CONFIRMATION DES INFORMATIONS EXTRAITES")
+    lines.append("="*60)
+    lines.append(f"Patient : {infos.patient}")
+    lines.append("\nMédicaments prescrits :")
+    for i, med in enumerate(infos.medicaments, 1):
+        lines.append(f"  {i}. Nom : {med.nom}")
+        lines.append(f"     Posologie : {med.posologie}")
+        lines.append(f"     Durée : {med.duree}")
+        lines.append("")
+    lines.append("="*60)
+    lines.append("Veuillez confirmer ces informations en répondant 'oui' ou 'non' à l'oral.")
+    lines.append("="*60)
+    return "\n".join(lines)
 
 if __name__ == "__main__":
     app.run(debug=True)
