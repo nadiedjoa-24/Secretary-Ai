@@ -124,7 +124,7 @@ class Planner_agent:
 
         Contexte
         ────────
-        • Date du jour : {datetime.now().date()}
+        • Date du jour : {datetime.now().date().today().strftime('%A')} le {datetime.now().date()}
         • Créneaux libres (à partir d’aujourd’hui, pour les deux mois à venir) :
         {self.get_available_timeslots(from_date=datetime.today().date())}
 
@@ -149,7 +149,9 @@ class Planner_agent:
                     f"au format YYYY-MM-DD pour la date et HH:MM pour l'heure, sans aucune inférence. "
                     f"Si tu es certain que ces deux informations sont présentes, fixe le champ final à True, "
                     f"sinon laisse le champ final à False. Si l'utilisateur n'a pas explicitement fourni la date "
-                    f"ou l'heure, les champs date et time doivent rester à None. Date du jour : {datetime.now().date()}."
+                    f"ou l'heure, les champs date et time doivent rester à None. Date du jour : {datetime.now().date().today().strftime('%A')} le {datetime.now().date()}."
+                    f"Tu ne valideras les données du rendez-vous, c'est-à-dire placer final à True, que si il a explicitement été convenu de la date et de l'horaire du nouveau rendez-vous."
+
                 )
         conversation: Conv = Conv()
         parsing_conv: Conv = Conv()
@@ -199,12 +201,14 @@ class Planner_agent:
 
             print(f"Nouvelle date proposée : {new_date.new_date} à {new_date.new_time}, final : {new_date.final}")
             
-            if new_date.final:
+            if new_date.final and (new_date.new_date is not None) and (new_date.new_time is not None):
+                print(f"🤖 Tentative de suppression du rendez-vous : {appointment}")
                 self.planner_controller.delete_rdv(appointment=appointment)
                 appointment.date = new_date.new_date
                 appointment.start_time = new_date.new_time
                 self.planner_controller.add_rdv(appointment=appointment)
                 rescheduled = True
+                conversation.append(Message(role="system", content=f"Le rendez-vous a correctement été reprogrammé pour la date : {new_date}. Tu peux terminer la conversation."))
             
             answwer = self.client.basic(conversation.to_dict())
             conversation.append(answwer)

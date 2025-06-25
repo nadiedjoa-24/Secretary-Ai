@@ -1,129 +1,109 @@
-# Installation et Configuration de llama.cpp
+# ARTISHOW - SECRETARYAI
 
-## 1. Cloner le dépôt `llama.cpp`
+Le projet **secretaryAI** a pour objectif de développer des outils basés sur l’intelligence artificielle afin d’optimiser les tâches répétitives d’une secrétaire médicale.
 
-```bash
-git clone https://github.com/ggerganov/llama.cpp.git
-cd llama.cpp
-```
+Chaque tâche sera prise en charge par un agent d’intelligence artificielle, composé de deux parties : 
+- un contrôleur technique chargé de manipuler les données, 
+- et une partie intelligente s’appuyant soit sur une API externe (OpenAI, Mistral, etc.), soit sur une solution locale (modèles HuggingFace via `transformers`, accompagnés d’une interface réseau).
 
-Vérifiez la version de `nvcc` :
+## Client intelligent
 
-```bash
-nvcc --version
-```
+Pour garantir une bonne interopérabilité, chaque client (API ou local) devra implémenter une interface commune définie dans `BaseAIModel`. Les fonctionnalités à implémenter sont les suivantes :
 
-Si aucune sortie n'est affichée, redéfinir les variables locales :
+- **Basic** : requête simple pour un traitement rapide avec une bonne fiabilité.
+- **Reflexion** : requête plus complexe offrant une meilleure compréhension du problème, mais avec un temps de traitement plus long.
+- **Parsing** : extraction de données à partir d’une conversation, selon un modèle de données prédéfini.
+- **STT (Speech-to-Text)** : conversion d’un fichier audio (.wav, .mp3) en texte.
+- **TTS (Text-to-Speech)** : génération d’un fichier audio fluide et naturel à partir d’un prompt textuel.
 
-```bash
-export PATH=/usr/local/cuda-12.5/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/cuda-12.5/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
-export LIBRARY_PATH=/usr/local/cuda-12.5/targets/x86_64-linux/lib:$LIBRARY_PATH
-export CUDACXX=/usr/local/cuda-12.5/bin/nvcc
-```
+ ```python
+class Message(BaseModel):
+    role: Literal["user", "assistant", "system"]
+    content: str
 
----
+class BaseAIModel(ABC):
+    
+    @abstractmethod
+    def basic(self, messages: List[Message]) -> Message:
+        pass
 
-## 2. Compiler `llama.cpp` avec support GPU
+    @abstractmethod
+    def reflexion(self, messages: List[Message]) -> Message:
+        pass
 
-Nettoyez les fichiers de compilation existants :
+    @abstractmethod
+    def parse(self, messages: List[Message], data_model: BaseModel) -> BaseModel:
+        pass
 
-```bash
-rm -rf build
-```
-
-Générez les fichiers de compilation avec CUDA activé :
-
-```bash
-cmake -B build -DGGML_CUDA=ON 
-```
-si ca fonctionne pas : 
-```bash
-cmake -B build -DGGML_CUDA=ON -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.5/bin/nvcc
-```
-
-Compilez le projet en utilisant tous les cœurs disponibles :
-
-```bash
-cmake --build build --config Release -j $(nproc)
-```
-
-le ` nrpoc `signifie que l'on prend tous les coeurs dispo.
+    @abstractmethod
+    def tts(self, text: str, output_path: str) -> str:
+        pass
+    
+    @abstractmethod
+    def stt(self, audio_path: str) -> Message:
+        pass
 
 
----
+ ```
 
-## 3. Téléchargement du Modèle Mistral 7B GGUF
+### 1. API
 
-Téléchargez le modèle Mistral 7B quantisé :
+La classe `API_Client` implémente l’interface `BaseAIModel` en s’appuyant sur une API existante. Pour notre projet, nous avons choisi l’API d’OpenAI.
 
-```bash
-wget https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q4_K_M.gguf -P models/
-```
+- **Avantages** : Solution complète, très bien documentée et particulièrement performante.  
+- **Inconvénients** : La sécurité des données n’est pas totalement garantie une fois celles-ci envoyées sur les serveurs de l’API. De plus, les requêtes sont payantes, ce qui peut engendrer un coût.
 
-Vérifiez la disponibilité du GPU :
+Nous avons estimé le coût moyen d’utilisation dans un scénario réaliste. Dans notre cas, 100 requêtes représentent environ 1 centime d’euro. En supposant qu’un cabinet médical effectue environ 200 actions par jour, cela reviendrait à environ 50 centimes par mois — un coût négligeable.  
+Par ailleurs, une solution basée sur une API nécessite généralement moins de maintenance technique.
 
-```bash
-nvidia-smi
-```
+### 2. LOCAL
 
-Lancez Mistral 7B :
+La classe `API_Local` implémente également `BaseAIModel`, mais en utilisant le package `transformers` de HuggingFace. L’inférence des modèles est exécutée localement sur des GPU via CUDA, avec une interface réseau permettant la communication entre les agents et les ressources de calcul.
 
-```bash
-CUDA_VISIBLE_DEVICES=0 ./build/bin/llama-cli -m models/mistral-7b-instruct-v0.2.Q4_K_M.gguf --interactive --n-gpu-layers 100
-```
+- **Avantages** : Meilleur contrôle des paramètres des modèles, ce qui permet une adaptation fine à chaque usage. La sécurité est renforcée grâce à une maîtrise complète des données.  
+- **Inconvénients** : Mise en œuvre plus complexe, nécessitant un effort de maintenance accru. De plus, l’inférence locale requiert du matériel dédié, comme des GPU.
 
-### Explication des paramètres :
-- `CUDA_VISIBLE_DEVICES=0` → Force l'utilisation du GPU 0.
-- `-m models/mistral-7b-instruct-v0.2.Q4_K_M.gguf` → Charge le modèle GGUF.
-- `--interactive` → Active le mode conversationnel.
-- `--n-gpu-layers 100` → Charge 100 couches du modèle sur GPU (ajuster si VRAM insuffisante).
-
----
-
-## 4. Optimisation des Performances
-
-### Limiter les threads CPU (`-t 16`)
-
-```bash
-CUDA_VISIBLE_DEVICES=0 ./build/bin/llama-cli -m models/mistral-7b-instruct-v0.2.Q4_K_M.gguf --interactive --n-gpu-layers 100 -t 16
-```
----
-
-### Réduire la taille du contexte (`--ctx-size 2048`)
-
-```bash
-CUDA_VISIBLE_DEVICES=0 ./build/bin/llama-cli -m models/mistral-7b-instruct-v0.2.Q4_K_M.gguf --interactive --n-gpu-layers 100 -t 16 --ctx-size 2048
-```
-
-
----
-
-### Optimiser le chargement (`--no-mmap --no-warmup`)
-
-- `--no-mmap` → Désactive le mappage mémoire, accélère le chargement.
-- `--no-warmup` → Désactive l'échauffement initial, réduit l'attente.
-
----
+D’un point de vue financier, cette solution garantit la confidentialité des données des patients, mais elle engendre un coût plus élevé, estimé entre 30 et 40 euros par mois (incluant la maintenance, l’infrastructure et le matériel nécessaire).
 
 
 
-## 5. Charger les modèles en local et les executer sur gpu à partir de packages python
-
-- Pour charger des modèles depuis hugging face directement depuis hugging face, utiliser le package `transformer`.
-- Pour charger les modèles depuis llama.cpp, installer le package sur la ligne de commande en spécifiant l'installation du package sur gpu : 
-
-```bash
-pip install llama-cpp-python[cuda]
-```
-ou
-```bash
-CMAKE_ARGS="-DGGML_CUDA=on" pip install llama-cpp-python --force-reinstall --no-cache-dir
-```
 
 
-## 6. API de networking pour exécuter les modèles sur gpu à distance 
+## Reprogrammation de rendez-vous
 
-- Exécuter le script `serveur.py` sur le gpu (il faut cloner le repo pour avoir accès à ai_controller).
-- On peut ensuite soit utiliser la ligne de commande avec `CURL`en méthode `POST` ou exécuter le script `client.py` pour intéragir.
-- La classe `Client` permet de l'intégrer à d'autres scripts.
+La gestion de la reprogrammation des rendez-vous repose sur deux composants principaux :
+
+- **`PlannerController`** : Ce module permet de créer et gérer un planning structuré au format JSON. Il inclut plusieurs fonctionnalités :
+  - ajout et suppression de rendez-vous selon un format temporel prédéfini,
+  - récupération des rendez-vous pour une période donnée à partir d’une date de référence,
+  - détection automatique des créneaux horaires disponibles,
+  - persistance des données dans un fichier JSON local, assurant la sauvegarde et la traçabilité des actions.
+
+- **`planning_agent`** : Il s’agit d’un agent conversationnel intelligent, reposant sur une API externe. Il interagit directement avec le `PlannerController` pour proposer une interface naturelle permettant de reprogrammer un rendez-vous. La méthode principale `reschedule` permet à un utilisateur (secrétaire ou patient) de reformuler une demande de rendez-vous, qui sera analysée, interprétée, puis exécutée de manière autonome.
+
+## Gestion automatique et simplifiée d'une boîte mail
+
+Pour faciliter la gestion quotidienne d’une boîte mail professionnelle, deux modules interagissent ensemble :
+
+- **`mail_handler`** : Ce module exploite les protocoles **IMAP** (réception) et **SMTP** (envoi) grâce aux bibliothèques Python `imaplib` et `smtplib`. Il est connecté à une boîte Gmail dédiée au projet et permet de :
+  - lire les e-mails entrants non lus,
+  - extraire les pièces jointes,
+  - envoyer automatiquement des réponses ou des notifications.
+
+- **`Mail_agent`** : Cet agent IA permet :
+  - de générer un résumé automatique de tous les e-mails non lus,
+  - de trier les courriels selon leur contenu, expéditeur ou urgence,
+  - de proposer des réponses types ou des actions à entreprendre en fonction du contexte.
+
+## Génération d’ordonnance automatique
+
+Un dernier agent vise à assister les médecins dans la création rapide et fiable d’ordonnances médicales :
+
+- **`ordo_agent`** : Ce composant permet de :
+  - générer un document PDF à partir d’un modèle personnalisable aux couleurs et coordonnées du cabinet,
+  - enregistrer les informations du médecin (nom, spécialité, numéro RPPS, etc.),
+  - parser une requête vocale ou textuelle contenant les médicaments prescrits ainsi que les données du patient (nom, prénom, posologie, durée...),
+  - produire une ordonnance finalisée, prête à être imprimée ou envoyée.
+
+Cet outil vise à améliorer la fluidité de la consultation, tout en assurant la rigueur et la lisibilité des prescriptions.
+

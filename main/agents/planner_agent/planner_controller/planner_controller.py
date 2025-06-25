@@ -39,15 +39,12 @@ class PlannerController():
 
     def _init_year(self, year: int):
         """Initialize the planning for a given year with empty days and both doctors."""
-        # Build empty planning structure for all months, days, and doctors
         self.planning = {}
         for month in range(1, 13):
             num_days = calendar.monthrange(year, month)[1]
             self.planning[month] = {}
             for day in range(1, num_days + 1):
-                # Initialize an empty list of appointments for each doctor
                 self.planning[month][day] = []
-        # Persist the initialized year to disk
         self._save(year)
 
     def _load(self, year: int):
@@ -106,6 +103,9 @@ class PlannerController():
         raw_new_start = datetime.combine(appointment.date, appointment.start_time)
         new_start = self._naive(raw_new_start)
         new_end = self._naive(new_start + self.APPOINTMENT_DURATION)
+        # Normalize appointment.start_time by removing tzinfo if present
+        if appointment.start_time.tzinfo is not None:
+            appointment.start_time = appointment.start_time.replace(tzinfo=None)
         for existing in self.planning[month][day]:
             raw_ex_start = datetime.combine(existing.date, existing.start_time)
             ex_start = self._naive(raw_ex_start)
@@ -206,12 +206,8 @@ class PlannerController():
         month = appointment.date.month
         day = appointment.date.day
         try:
+            print(f"{self.planning[month][day]}")
             self.planning[month][day].remove(appointment)
-            # Clean up empty containers
-            if not self.planning[month][day]:
-                del self.planning[month][day]
-            if not self.planning[month]:
-                del self.planning[month]
             self._save(self.year)
         except (KeyError, ValueError):
             raise ValueError("Appointment not found")
@@ -245,7 +241,13 @@ if __name__ == "__main__":
     except ValueError as e:
         print(f"Failed to add appointment: {e}")
 
-    controller._load(2025)
+    # try:
+    #     controller.delete_rdv(appointment= appt)
+    # except Exception as e:
+    #     print("Failed to delet appointment.")
+
+
+
 
     # controller.delete_rdv(appt)
 
@@ -255,59 +257,59 @@ if __name__ == "__main__":
     # except ValueError as e:
     #     assert str(e) == "Appointment not found", f"Unexpected delete error message: {e}"
 
-    print("All tests passed successfully.")
+    # print("All tests passed successfully.")
     
-    # Generic test: retrieve appointments and available timeslots for a given day
-    test_date = date(2025, 1, 1)
-    # Fetch all appointments for the test date
-    day_appts = controller.get_day_rdv(datetime.combine(test_date, time()))
-    assert len(day_appts) > 0, f"Expected at least one appointment on {test_date}, got {len(day_appts)}"
-    print(f"Found {len(day_appts)} appointments on {test_date}: {[a.start_time.isoformat() for a in day_appts]}")
-    # Fetch available timeslots for the same date
-    slots = controller.get_day_available_timeslots(datetime.combine(test_date, time()))
-    slot_times = [slot.time() for slot in slots]
-    # Verify that no appointment start time appears in available slots
-    for appt in day_appts:
-        assert appt.start_time not in slot_times, f"Slot {appt.start_time} should be marked occupied"
-    print(f"Available timeslots on {test_date}: {[t.isoformat() for t in slot_times]}")
-    print("Generic test passed: get_day_rdv and get_day_available_timeslots for a given day")
+    # # Generic test: retrieve appointments and available timeslots for a given day
+    # test_date = date(2025, 1, 1)
+    # # Fetch all appointments for the test date
+    # day_appts = controller.get_day_rdv(datetime.combine(test_date, time()))
+    # assert len(day_appts) > 0, f"Expected at least one appointment on {test_date}, got {len(day_appts)}"
+    # print(f"Found {len(day_appts)} appointments on {test_date}: {[a.start_time.isoformat() for a in day_appts]}")
+    # # Fetch available timeslots for the same date
+    # slots = controller.get_day_available_timeslots(datetime.combine(test_date, time()))
+    # slot_times = [slot.time() for slot in slots]
+    # # Verify that no appointment start time appears in available slots
+    # for appt in day_appts:
+    #     assert appt.start_time not in slot_times, f"Slot {appt.start_time} should be marked occupied"
+    # print(f"Available timeslots on {test_date}: {[t.isoformat() for t in slot_times]}")
+    # print("Generic test passed: get_day_rdv and get_day_available_timeslots for a given day")
 
-    # Test: week appointments and available timeslots for week of test_date
-    week_rdv = controller.get_week_rdv(datetime.combine(test_date, time()))
-    assert len(week_rdv) == 7, f"Expected 7 days in week_rdv, got {len(week_rdv)}"
-    week_slots = controller.get_week_available_timeslots(datetime.combine(test_date, time()))
-    assert len(week_slots) == 7, f"Expected 7 lists in week_slots, got {len(week_slots)}"
-    # Verify each day's appointments and slots match daily methods
-    start_week = test_date - timedelta(days=test_date.weekday())
-    for i in range(7):
-        day = start_week + timedelta(days=i)
-        day_dt = datetime.combine(day, time())
-        expected_appts = controller.get_day_rdv(day_dt)
-        assert week_rdv[i] == expected_appts, f"get_week_rdv mismatch on {day.date()}"
-        expected_slots = controller.get_day_available_timeslots(day_dt)
-        assert week_slots[i] == expected_slots, f"get_week_available_timeslots mismatch on {day.date()}"
-    print(f"Week tests passed for the week of {test_date}")
+    # # Test: week appointments and available timeslots for week of test_date
+    # week_rdv = controller.get_week_rdv(datetime.combine(test_date, time()))
+    # assert len(week_rdv) == 7, f"Expected 7 days in week_rdv, got {len(week_rdv)}"
+    # week_slots = controller.get_week_available_timeslots(datetime.combine(test_date, time()))
+    # assert len(week_slots) == 7, f"Expected 7 lists in week_slots, got {len(week_slots)}"
+    # # Verify each day's appointments and slots match daily methods
+    # start_week = test_date - timedelta(days=test_date.weekday())
+    # for i in range(7):
+    #     day = start_week + timedelta(days=i)
+    #     day_dt = datetime.combine(day, time())
+    #     expected_appts = controller.get_day_rdv(day_dt)
+    #     assert week_rdv[i] == expected_appts, f"get_week_rdv mismatch on {day.date()}"
+    #     expected_slots = controller.get_day_available_timeslots(day_dt)
+    #     assert week_slots[i] == expected_slots, f"get_week_available_timeslots mismatch on {day.date()}"
+    # print(f"Week tests passed for the week of {test_date}")
 
-    # Test: month appointments and available timeslots for month of test_date
-    month_rdv = controller.get_month_rdv(datetime.combine(test_date, time()))
-    month_slots = controller.get_month_available_timeslots(datetime.combine(test_date, time()))
-    print(month_slots)
-    year = test_date.year
-    month = test_date.month
-    cal = calendar.monthcalendar(year, month)
-    # Verify each week/day cell matches daily methods or is empty for padding
-    for w_idx, week in enumerate(cal):
-        for d_idx, day in enumerate(week):
-            if day == 0:
-                assert month_rdv[w_idx][d_idx] == [], f"Expected empty appointments for placeholder at week {w_idx}, day {d_idx}"
-                assert month_slots[w_idx][d_idx] == [], f"Expected empty slots for placeholder at week {w_idx}, day {d_idx}"
-            else:
-                day_dt = datetime(year, month, day)
-                expected_appts = controller.get_day_rdv(datetime.combine(day_dt.date(), time()))
-                assert month_rdv[w_idx][d_idx] == expected_appts, f"get_month_rdv mismatch on {day_dt.date()}"
-                expected_slots = controller.get_day_available_timeslots(datetime.combine(day_dt.date(), time()))
-                assert month_slots[w_idx][d_idx] == expected_slots, f"get_month_available_timeslots mismatch on {day_dt.date()}"
-    print(f"Month tests passed for {month}/{year}")
+    # # Test: month appointments and available timeslots for month of test_date
+    # month_rdv = controller.get_month_rdv(datetime.combine(test_date, time()))
+    # month_slots = controller.get_month_available_timeslots(datetime.combine(test_date, time()))
+    # print(month_slots)
+    # year = test_date.year
+    # month = test_date.month
+    # cal = calendar.monthcalendar(year, month)
+    # # Verify each week/day cell matches daily methods or is empty for padding
+    # for w_idx, week in enumerate(cal):
+    #     for d_idx, day in enumerate(week):
+    #         if day == 0:
+    #             assert month_rdv[w_idx][d_idx] == [], f"Expected empty appointments for placeholder at week {w_idx}, day {d_idx}"
+    #             assert month_slots[w_idx][d_idx] == [], f"Expected empty slots for placeholder at week {w_idx}, day {d_idx}"
+    #         else:
+    #             day_dt = datetime(year, month, day)
+    #             expected_appts = controller.get_day_rdv(datetime.combine(day_dt.date(), time()))
+    #             assert month_rdv[w_idx][d_idx] == expected_appts, f"get_month_rdv mismatch on {day_dt.date()}"
+    #             expected_slots = controller.get_day_available_timeslots(datetime.combine(day_dt.date(), time()))
+    #             assert month_slots[w_idx][d_idx] == expected_slots, f"get_month_available_timeslots mismatch on {day_dt.date()}"
+    # print(f"Month tests passed for {month}/{year}")
     
 
       

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Rendez-vous pour le mois {{ month }}</title>
+</head>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-OK8tI+1rYuoB5+0PE2xWeJsJ5V7lH+2wv+di6lE9mlE6OJ5uM0VgPc7SZyNBTXmq"
+    crossorigin="anonymous"
+  >
+  <style>
+    /* Page background */
+    body {
+      background-color: #f8f9fa;
+    }
+    /* Central container styling */
+    .container {
+      background-color: #ffffff;
+      padding: 2rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    /* Heading style */
+    h1 {
+      color: #343a40;
+      font-weight: 600;
+    }
+    /* Card headers */
+    .card-header {
+      background-color: #f1f3f5;
+      font-weight: 500;
+    }
+    /* List-group items */
+    .list-group-item {
+      font-size: 1rem;
+    }
+    /* Buttons custom colors */
+    .btn-primary {
+      background-color: #0069d9;
+      border-color: #0062cc;
+    }
+    .btn-primary:hover {
+      background-color: #0053ba;
+      border-color: #0041a8;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      border-color: #6c757d;
+    }
+    .btn-secondary:hover {
+      background-color: #5a6268;
+      border-color: #545b62;
+    }
+  </style>
+</head>
+</head>
+<body>
+  <div class="container mt-4">
+    <h1 class="mb-4">Rendez-vous – mois {{ month }}</h1>
+    {% if appointments_by_day %}
+      {% for day, appts in appointments_by_day.items()|sort %}
+        <div class="card mb-3">
+          <div class="card-header">
+            Jour {{ day }}
+          </div>
+          <ul class="list-group list-group-flush">
+            {% for appt in appts %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{{ appt.start_time }}</strong> –
+                  {{ appt.name }} {{ appt.surname }}<br>
+                  <small class="text-muted">{{ appt.description }}</small>
+                </div>
+                <a href="{{ url_for('reschedule', appt_id=appt.id) }}" class="btn btn-sm btn-primary">Reprogrammer</a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="alert alert-info">Aucun rendez-vous pour ce mois.</div>
+    {% endif %}
+    <a href="/" class="btn btn-secondary mt-3">← Retour</a>
+  </div> <!-- /container -->
+</body>
+</html>
