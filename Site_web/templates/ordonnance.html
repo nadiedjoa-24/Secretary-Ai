@@ -62,6 +62,44 @@
             background: #e57373;
             color: #fff;
         }
+
+        #voice-loader {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #voice-loader svg {
+            animation: rotate 2s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .pulse {
+            animation: pulse-animation 1.5s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
     </style>
 </head>
 
@@ -84,15 +122,35 @@
         {% endfor %}
         {% endif %}
         {% endwith %}
+        <div id="voice-loader" style="display:none;">
+            <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
+                <circle cx="27" cy="27" r="20" stroke="#36d1c4" stroke-width="4" fill="#36d1c4" opacity="0.7" />
+                <rect x="23" y="15" width="8" height="24" rx="4" fill="#fff" />
+                <circle cx="27" cy="41" r="3" fill="#fff" />
+            </svg>
+            <div style="font-size:0.95em;color:#36d1c4;margin-top:6px;">Enregistrement vocal…</div>
+        </div>
         <form method="post">
             <button type="submit" id="start-btn">Démarrer la dictée et générer l'ordonnance</button>
             <button type="button" id="stop-btn" style="margin-left:20px;background:#e57373;">Arrêter
                 l'enregistrement</button>
         </form>
         <script>
-            document.getElementById('stop-btn').onclick = function () {
+            const loader = document.getElementById('voice-loader');
+            const startBtn = document.getElementById('start-btn');
+            const stopBtn = document.getElementById('stop-btn');
+
+            startBtn.onclick = function () {
+                loader.style.display = 'flex';
+                loader.classList.add('pulse');
+                // Le formulaire sera soumis normalement, donc l'icône s'affichera jusqu'au rechargement
+            };
+
+            stopBtn.onclick = function () {
                 fetch('/stop', { method: 'POST' });
                 alert("Demande d'arrêt envoyée.");
+                loader.classList.remove('pulse');
+                loader.style.display = 'none';
             };
         </script>
     </div>
