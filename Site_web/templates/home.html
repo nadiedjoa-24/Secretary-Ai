@@ -2,14 +2,59 @@
 <html>
 
 <head>
-    <title>Accueil</title>
+    <title>Accueil - Secrétaire IA</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #f4f4f4;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 100px auto;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(44, 83, 100, 0.13);
+            padding: 40px 32px 32px 32px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 40px;
+        }
+
+        .main-btn {
+            background: linear-gradient(90deg, #36d1c4 0%, #5b86e5 100%);
+            color: #fff;
+            border: none;
+            padding: 18px 38px;
+            border-radius: 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: background 0.2s, transform 0.2s;
+            box-shadow: 0 2px 8px rgba(44, 83, 100, 0.15);
+            display: block;
+            width: 100%;
+        }
+
+        .main-btn:hover {
+            background: linear-gradient(90deg, #5b86e5 0%, #36d1c4 100%);
+            transform: translateY(-2px) scale(1.03);
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Bienvenue</h1>
-    <form action="{{ url_for('summarize') }}" method="get">
-        <button type="submit">Oui, commencer le résumé de la box mail</button>
-    </form>
+    <div class="container">
+        <h1>Bienvenue sur Secrétaire IA</h1>
+        <a href="{{ url_for('ordonnance') }}"><button class="main-btn">Générer une ordonnance</button></a>
+        <a href="{{ url_for('auto_sort') }}"><button class="main-btn">Gérer les mails</button></a>
+    </div>
 </body>
 
 </html>
