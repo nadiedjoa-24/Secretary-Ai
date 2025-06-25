@@ -17,7 +17,7 @@
   | Développement appli    | Yannic & Agshay                      |
 
 ## Mardi 25 février 2025
-- Entretien avec une secrétaire :
+- Entretien avec une secrétaire (obtenu grâce à notre encadrant Artishow) :
   - Rencontre peu productive
   - La personne s'est montrée réticente.
   - Analyse : Mauvais choix d'interlocuteur – une secrétaire pourrait percevoir notre projet comme une menace pour son emploi alors qu'il vise à l'aider en automatisant les tâches répétitives
@@ -26,10 +26,13 @@
 - (Yanic) : Création d'un planning pour les rdv avec des données spécifiées
 - (Yanic & Agshay) : Création d'un AI_Agent qui donne des ordonnances
 - (Yifan & Théophile) : Début de la mise en place de Speech-to-text
+- (Antoine) : Se renseigne sur les modèles text-to-speech qui sont utilisables
 
 ## Mardi 18 mars 2025
 - (Yifan) : Implémentation de LLaMA sur GPU
 - (Antoine) : Création d'un premier modèle text-to-speech en utilisant pyttsx3 ou gtts
+- (Agshay & Yanic) : Developpement de l'agent ordonnances
+- (Théophile) : Developpement modèles speech_to_text
 
 ## Mardi 25 mars 2025
 - (Yifan) : Implémentation de Whispers pour la voix de l'IA
@@ -51,6 +54,7 @@
 - (Yifan) : Mise en place de Mistral pour répondre aux clients + documentation API à distance
 - (Agshay) : Test de speech_to_text sur GPU avec Mistral et Whispers
 - (Yanic) : Mise en place d'un script permettant de mettre en serveur un bot AI sur le GPU à distance
+- (Antoine) : Documentation TTS et STT
 
 ## Mardi 15 avril 2025
 - (Yifan) : Planning + tentative de relier les scripts avec le bot à distance
