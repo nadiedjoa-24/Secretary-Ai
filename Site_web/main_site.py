@@ -165,7 +165,7 @@ def download_ordonnance(filename):
     return send_from_directory(dossier_ordonnances, filename)
 
 # --- Gestion des mails ---
-@app.route('/mails', methods=['GET', 'POST'])
+@app.route('/auto_sort', methods=['GET', 'POST'])
 def auto_sort():
     mode = None
     mails = []
