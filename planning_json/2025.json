@@ -212,6 +212,15 @@
                 "phone": null,
                 "description": "Test de replanification",
                 "start_time": "08:00:00+00:00"
+            },
+            {
+                "name": "Alice",
+                "surname": "Dupont",
+                "date": "2025-07-02",
+                "mail": "alice.dupont@example.com",
+                "phone": null,
+                "description": "Test de replanification",
+                "start_time": "10:30:00+00:00"
             }
         ],
         "3": [],
