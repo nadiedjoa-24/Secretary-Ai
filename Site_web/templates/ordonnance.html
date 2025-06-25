@@ -107,20 +107,16 @@
     <div class="container">
         <h1>Générer une ordonnance vocale</h1>
         {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
         {% for category, message in messages %}
         {% if category == "file" %}
         <div class="flash flash-success">
-            <a href="{{ url_for('download_ordonnance', filename=message.split(': ')[1]) }}"
+            <a href="{{ url_for('download_ordonnance', filename=message) }}"
                 style="color:#fff;text-decoration:underline;" download>
-                Télécharger l'ordonnance générée ({{ message.split(': ')[1] }})
+                Télécharger l'ordonnance générée ({{ message }})
             </a>
         </div>
-        {% else %}
-        <div class="flash flash-{{ category }}">{{ message }}</div>
         {% endif %}
         {% endfor %}
-        {% endif %}
         {% endwith %}
         <div id="voice-loader" style="display:none;">
             <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
@@ -135,6 +131,54 @@
             <button type="button" id="stop-btn" style="margin-left:20px;background:#e57373;">Arrêter
                 l'enregistrement</button>
         </form>
+        {% if infos %}
+        <div class="flash flash-info" style="text-align:left;">
+            <b>Patient :</b> {{ infos.patient }}<br>
+            <b>Médicaments :</b>
+            <ul>
+                {% for med in infos.medicaments %}
+                <li>
+                    <b>{{ med.nom }}</b> – {{ med.posologie }} – {{ med.duree }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% if confirmation %}
+        <div style="margin:18px 0 12px 0;color:#36d1c4;font-weight:bold;">
+            Dites <span style="color:#fff;">"oui"</span> pour générer l’ordonnance ou <span
+                style="color:#fff;">"non"</span> pour corriger.
+        </div>
+        <form method="post">
+            <button type="submit" name="confirm_oral" value="1" style="margin-top:20px;">Lancer la confirmation
+                orale</button>
+        </form>
+        {% endif %}
+        {% endif %}
+        {% if retry == True %}
+        <div class="flash flash-danger">
+            Informations incomplètes.<br>
+            Voulez-vous recommencer la dictée ?<br>
+            <b>Voulez-vous recommencer la dictée ? (Dites 'oui' pour recommencer ou 'non' pour arrêter)</b>
+        </div>
+        <form method="post">
+            <button name="retry" value="oui" type="submit">Oui, recommencer</button>
+            <button name="retry" value="non" type="submit" style="background:#e57373;">Non, arrêter</button>
+        </form>
+        {% elif retry == "after_success" %}
+        <div class="flash flash-info">
+            <b>Voulez-vous recommencer la dictée ? (Dites 'oui' pour recommencer ou 'non' pour arrêter)</b>
+        </div>
+        <form method="post">
+            <button name="retry" value="oui" type="submit">Oui, recommencer</button>
+            <button name="retry" value="non" type="submit" style="background:#e57373;">Non, arrêter</button>
+        </form>
+        {% endif %}
+        {% if confirmation_text %}
+        <pre
+            style="background:#222;color:#36d1c4;padding:18px 12px;border-radius:8px;text-align:left;white-space:pre-wrap;">
+{{ confirmation_text }}
+</pre>
+        {% endif %}
         <script>
             const loader = document.getElementById('voice-loader');
             const startBtn = document.getElementById('start-btn');

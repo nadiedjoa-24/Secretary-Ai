@@ -184,6 +184,9 @@
     {% elif mode == "summarize" %}
     <div class="no-mail">Vous êtes bien à jour</div>
     {% endif %}
+    {% if confirmation_response %}
+    <div style="color:#36d1c4;margin-bottom:12px;">{{ confirmation_response }}</div>
+    {% endif %}
 </body>
 
 </html>
