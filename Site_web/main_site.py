@@ -266,7 +266,7 @@ def reschedule(appt_id):
         start_time=start_time
     )
     planner.reschedule_appointment(appointment)
-    with open("./webapp_planner/planning_json/2025.json", encoding="utf-8") as f:
+    with open("./planning_json/2025.json", encoding="utf-8") as f:
         raw = json.load(f)
     appointments = []
     if isinstance(raw, dict) and all(isinstance(days, dict) for days in raw.values()):
