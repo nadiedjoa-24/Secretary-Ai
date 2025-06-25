@@ -92,27 +92,28 @@ class OrdoAgent:
     def reconnaitre_voix(self):
         """
         Écoute le micro, enregistre, puis transcrit avec l'API_Client.
-        Retourne la transcription complète, ou rien si stop_flag est activé.
+        Arrête l'écoute dès que l'utilisateur dit 'c'est tout' ou si stop_flag est activé.
+        Retourne la transcription complète.
         """
         import Site_web.ordonnance as ordonnance_py  # pour accéder à stop_flag
-        print("Veuillez parler après le bip... (cliquez sur Arrêter pour stopper)")
-        if hasattr(ordonnance_py, "stop_flag") and ordonnance_py.stop_flag.is_set():
-            ordonnance_py.stop_flag.clear()
-            print("Arrêt demandé par le site (avant écoute).")
-            return ""
-        audio_path = self.audio_ctrl.listen()
-        msg = self.api_client.stt(audio_path)
-        print(f"Transcription : {msg.content}")
-        # Si le flag est activé juste après l'écoute
-        if hasattr(ordonnance_py, "stop_flag") and ordonnance_py.stop_flag.is_set():
-            ordonnance_py.stop_flag.clear()
-            print("Arrêt demandé par le site (après écoute).")
-            return msg.content
-        # Arrêt vocal classique
-        if "c'est tout" in msg.content.lower() or "stop" in msg.content.lower():
-            print("Arrêt vocal détecté.")
-            return msg.content
-        return msg.content
+        print("Veuillez parler après le bip... (dites 'c'est tout' ou cliquez sur Arrêter pour stopper)")
+        full_text = []
+        while True:
+            # Vérifie le flag d'arrêt externe
+            if hasattr(ordonnance_py, "stop_flag") and ordonnance_py.stop_flag.is_set():
+                ordonnance_py.stop_flag.clear()
+                print("Arrêt demandé par le site.")
+                break
+            audio_path = self.audio_ctrl._listen()
+            msg = self.api_client.stt(audio_path)
+            print(f"Transcription : {msg.content}")
+            # Arrêt vocal classique
+            if "c'est tout" in msg.content.lower() or "stop" in msg.content.lower():
+                break
+            full_text.append(msg.content)
+        transcript = " ".join(full_text)
+        print("Cest fini")
+        return transcript
 
     def generer_ordonnance(self, informations: PatientInfo):
         # Calcule le chemin du dossier 'ordonnances' au même niveau que 'ai_agents'
@@ -245,19 +246,19 @@ class OrdoAgent:
     def remplir_ordonnance_auto(self):
         self.parler("Je suis prêt. Dites toutes les informations pour l'ordonnance, puis dites 'c'est tout' quand vous avez terminé.")
         self.full_transcript = []
+        all_text = []
         while True:
             user_text = self.reconnaitre_voix()
             if "c'est tout" in user_text.lower():
                 break
-            self.full_transcript.append({"role": "user", "content": user_text})
+            if user_text.strip():
+                all_text.append(user_text)
+                self.full_transcript.append({"role": "user", "content": user_text})
 
+        # Concatène tous les segments pour une extraction complète
+        transcript = " ".join(all_text)
         try:
-            # Extraction structurée avec parse
-            info_patient = self.api_client.parse(
-                self.ordo_extraction_prompt + self.full_transcript,
-                PatientInfo
-            )
-            # Génération de l'ordonnance PDF
+            info_patient = self.extraire_infos_ordonnance(transcript)
             self.generer_ordonnance(info_patient)
             self.parler("Ordonnance générée avec succès.")
         except Exception as e:
