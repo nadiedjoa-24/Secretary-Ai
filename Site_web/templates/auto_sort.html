@@ -144,11 +144,11 @@
 <body>
     <h1>Gestion des mails</h1>
     <div class="centered-container">
-        <form action="/" method="get" style="display:inline;" onsubmit="showLoader()">
+        <form action="/mails" method="get" style="display:inline;" onsubmit="showLoader()">
             <input type="hidden" name="action" value="summarize">
             <button type="submit" class="refresh-btn">Résumer les mails</button>
         </form>
-        <form action="/" method="post" style="display:inline;" onsubmit="showLoader()">
+        <form action="/mails" method="post" style="display:inline;" onsubmit="showLoader()">
             <button type="submit" class="refresh-btn" name="auto_sort" value="1">Tri automatique</button>
         </form>
     </div>
