@@ -13,15 +13,6 @@
         ],
         "2": [
             {
-                "name": "Claire",
-                "surname": "Dubois",
-                "date": "2025-01-02",
-                "mail": "claire.dubois@example.com",
-                "phone": "555-0003",
-                "description": "R\u00e9sultats analyses",
-                "start_time": "10:30:00"
-            },
-            {
                 "name": "Daniel",
                 "surname": "Nguyen",
                 "date": "2025-01-02",
@@ -376,7 +367,17 @@
         "6": [],
         "7": [],
         "8": [],
-        "9": [],
+        "9": [
+            {
+                "name": "Claire",
+                "surname": "Dubois",
+                "date": "2023-07-09",
+                "mail": "claire.dubois@example.com",
+                "phone": "555-0003",
+                "description": "R\u00e9sultats analyses",
+                "start_time": "10:00:00"
+            }
+        ],
         "10": [],
         "11": [],
         "12": [],

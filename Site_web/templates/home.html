@@ -108,24 +108,11 @@
     </div>
     <div class="container">
         <h1>Bienvenue sur Secretary AI</h1>
-        <a href="/ordonnance" class="main-btn">
-            <img src="{{ url_for('static', filename='images/ordonnance.png') }}" alt="Ordonnance"
-                style="width: 20px; height: 20px; margin-right: 10px;">
-            Générer une ordonnance
-        </a>
-
-        <a href="/auto_sort" class="main-btn">
-            <img src="{{ url_for('static', filename='images/enveloppe.png') }}" alt="Mails"
-                style="width: 20px; height: 20px; margin-right: 10px;">
-            Gérer les mails
-        </a>
-
-        <!-- Nouveau bouton vers le planner -->
-        <a href="/planner/" class="main-btn">
-            <img src="{{ url_for('static', filename='images/calendar.png') }}" alt="Agenda"
-                style="width: 20px; height: 20px; margin-right: 10px;">
-            Accéder à l'agenda
-        </a>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 18px;">
+            <a href="/ordonnance" class="main-btn" style="width: 80%;">Générer une ordonnance</a>
+            <a href="/auto_sort" class="main-btn" style="width: 80%;">Gérer les mails</a>
+            <a href="/planner/" class="main-btn" style="width: 80%;">Accéder à l'agenda</a>
+        </div>
         <div style="font-size:0.98em; color:#90caf9; margin:18px 0 0 0;">
             Simplifiez votre quotidien professionnel avec l’IA.
         </div>

@@ -10,21 +10,30 @@
 <style>
   /* Page background */
   body {
-    background-color: #f8f9fa;
+    background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #f4f4f4;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
   }
 
   /* Central container styling */
   .container {
-    background-color: #ffffff;
-    padding: 2rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 80px auto;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(44, 83, 100, 0.13);
+    padding: 40px 32px 32px 32px;
+    text-align: center;
   }
 
   /* Heading style */
   h1 {
-    color: #343a40;
-    font-weight: 600;
+    color: #36d1c4;
+    font-weight: 700;
+    margin-bottom: 32px;
   }
 
   /* Form inputs */
@@ -34,82 +43,97 @@
 
   /* Select inputs */
   .form-select {
-    max-width: 150px;
+    max-width: 120px;
+    background: #2c5364;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: #f4f4f4;
   }
 
   /* Buttons custom colors */
-  .btn-primary {
-    background-color: #0069d9;
-    border-color: #0062cc;
-  }
-
-  .btn-primary:hover {
-    background-color: #0053ba;
-    border-color: #0041a8;
-  }
-
+  button,
+  .btn-primary,
   .btn-success {
-    background-color: #28a745;
-    border-color: #218838;
+    background: linear-gradient(90deg, #36d1c4 0%, #5b86e5 100%);
+    color: #fff;
+    border: none;
+    padding: 16px 38px;
+    border-radius: 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    margin-top: 18px;
+    transition: background 0.2s, transform 0.2s;
+    box-shadow: 0 2px 8px rgba(44, 83, 100, 0.15);
   }
 
+  button:hover,
+  .btn-primary:hover,
   .btn-success:hover {
-    background-color: #218838;
-    border-color: #1e7e34;
+    background: linear-gradient(90deg, #5b86e5 0%, #36d1c4 100%);
+    transform: translateY(-2px) scale(1.03);
   }
 
   /* Divider styling */
   hr {
     border-top: 1px solid #dee2e6;
   }
+
+  /* Label styling */
+  label {
+    color: #f4f4f4;
+    font-size: 1.1em;
+  }
 </style>
-</head>
 </head>
 
 <body>
+  <a href="{{ url_for('home') }}"
+    style="position: absolute; top: 32px; left: 32px; color:#36d1c4; text-decoration:none; font-weight:bold; font-size:1.1em; z-index:10;">
+    &#8592; Retour à l'accueil
+  </a>
+  <div class="container">
+    <h1 style="color:#36d1c4; font-weight:700; margin-bottom:32px;">Sélectionnez un mois</h1>
 
-  <body>
-    <div class="container mt-4 text-center">
-      <h1 class="mb-4">Sélectionnez un mois</h1>
-
-      <div class="mb-2" style="color:#0069d9;">
-        <strong>Voir les rendez-vous enregistrés pour le mois choisi :</strong>
-      </div>
-      <form action="/planner/appointments" method="get" class="row g-3 justify-content-center align-items-center">
-        <div class="col-auto">
-          <label for="month-appt" class="col-form-label">Mois (1–12) :</label>
-        </div>
-        <div class="col-auto">
-          <select id="month-appt" name="month" class="form-select">
-            {% for i in range(1, 13) %}
-            <option value="{{ i }}" {% if i==current_month %}selected{% endif %}>{{ i }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-auto">
-          <button type="submit" class="btn btn-primary">Voir rendez-vous</button>
-        </div>
-      </form>
-      <hr class="my-4">
-      <div class="mb-2" style="color:#28a745;">
-        <strong>Voir les créneaux disponibles pour le mois choisi :</strong>
-      </div>
-      <form action="/planner/available" method="get" class="row g-3 justify-content-center align-items-center">
-        <div class="col-auto">
-          <label for="month-avail" class="col-form-label">Mois (1–12) :</label>
-        </div>
-        <div class="col-auto">
-          <select id="month-avail" name="month" class="form-select">
-            {% for i in range(1, 13) %}
-            <option value="{{ i }}" {% if i==current_month %}selected{% endif %}>{{ i }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-auto">
-          <button type="submit" class="btn btn-success">Voir créneaux libres</button>
-        </div>
-      </form>
+    <div class="mb-2" style="color:#fff;">
+      <strong>Voir les rendez-vous enregistrés pour le mois choisi :</strong>
     </div>
-  </body>
+    <form action="/planner/appointments" method="get" class="row g-3 justify-content-center align-items-center"
+      style="margin-bottom: 24px;">
+      <div class="col-auto">
+        <label for="month-appt" class="col-form-label">Mois (1–12) :</label>
+      </div>
+      <div class="col-auto">
+        <select id="month-appt" name="month" class="form-select">
+          {% for i in range(1, 13) %}
+          <option value="{{ i }}" {% if i==current_month %}selected{% endif %}>{{ i }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Voir rendez-vous</button>
+      </div>
+    </form>
+    <hr class="my-4">
+    <div class="mb-2" style="color:#fff;">
+      <strong>Voir les créneaux disponibles pour le mois choisi :</strong>
+    </div>
+    <form action="/planner/available" method="get" class="row g-3 justify-content-center align-items-center">
+      <div class="col-auto">
+        <label for="month-avail" class="col-form-label">Mois (1–12) :</label>
+      </div>
+      <div class="col-auto">
+        <select id="month-avail" name="month" class="form-select">
+          {% for i in range(1, 13) %}
+          <option value="{{ i }}" {% if i==current_month %}selected{% endif %}>{{ i }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-success">Voir créneaux libres</button>
+      </div>
+    </form>
+  </div>
+</body>
 
 </html>

@@ -142,6 +142,10 @@
 </head>
 
 <body>
+    <a href="{{ url_for('home') }}"
+        style="position: absolute; top: 32px; left: 32px; color:#36d1c4; text-decoration:none; font-weight:bold; font-size:1.1em; z-index:10;">
+        &#8592; Retour à l'accueil
+    </a>
     <h1>Gestion des mails</h1>
     <div class="centered-container">
         <form action="/auto_sort" method="get" style="display:inline;" onsubmit="showLoader()">

@@ -100,12 +100,17 @@ class OrdoAgent:
         print("Veuillez parler après le bip... (dites 'c'est tout' ou cliquez sur Arrêter pour stopper)")
         full_text = []
         while True:
-            # Vérifie le flag d'arrêt externe
+            # Vérifie le flag d'arrêt externe AVANT d'écouter
             if hasattr(ordonnance_py, "stop_flag") and ordonnance_py.stop_flag.is_set():
                 ordonnance_py.stop_flag.clear()
                 print("Arrêt demandé par le site.")
                 break
             audio_path = self.audio_ctrl._listen()
+            # Vérifie le flag d'arrêt externe APRÈS l'écoute (au cas où il a été enclenché pendant l'écoute)
+            if hasattr(ordonnance_py, "stop_flag") and ordonnance_py.stop_flag.is_set():
+                ordonnance_py.stop_flag.clear()
+                print("Arrêt demandé par le site (après écoute).")
+                break
             msg = self.api_client.stt(audio_path)
             print(f"Transcription : {msg.content}")
             # Arrêt vocal classique
