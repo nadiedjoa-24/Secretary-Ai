@@ -211,6 +211,17 @@ def auto_sort():
                 "summary": summary,
                 "sender": sender
             })
+
+        # Tri automatique
+    if request.method == 'POST' and 'auto_sort' in request.form:
+        mode = "auto_sort"
+        classifications = mail_agent.classify_mailbox()
+        if classifications:
+            messages = [f"Mail déplacé avec succès dans : {folder}" for folder in classifications]
+        else:
+            messages = ["Aucun mail à trier."]
+
+
     return render_template("auto_sort.html", mails=mails, folders=folders, mode=mode, message=message, messages=messages)
 
 @app.route("/planner/")
