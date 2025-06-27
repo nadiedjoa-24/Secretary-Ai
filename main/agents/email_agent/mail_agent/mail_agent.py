@@ -58,7 +58,7 @@ class Mail_Agent:
         """
         Summarize a single email's content.
         """
-        prompt = f"You are an helpful assistant that gives a relevant summary of the following text. The summary has to be short and should containt the key elements. This is the text you have to sum up : {email.content}."
+        prompt = f"Tu es un assistant utile qui fournit un résumé pertinent du texte suivant. Le résumé doit être court, en français, et contenir les éléments clés. Voici le texte à résumer : {email.content}"
         msg: Message = Message(role="assistant", content=prompt)
         response = self.client.basic([msg]).content
         return response
