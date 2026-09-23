@@ -36,6 +36,7 @@ jobs:
         run: |
           docker run -d --name demo -p 8000:8000 -e AI_PROVIDER=groq -e GROQ_API_KEY=placeholder -e TTS_ENGINE=browser secretary-ai
           for i in $(seq 1 30); do curl -sf http://localhost:8000/ > /dev/null && break; sleep 1; done
-          for path in / /prescription /mail /planner/ /planner/appointments /planner/available /planner/reschedule/0; do
-            curl -sf "http://localhost:8000$path" > /dev/null || { docker logs demo; exit 1; }
+          reschedule=$(curl -sf http://localhost:8000/planner/appointments | grep -o '/planner/reschedule/[0-9a-f]*' | head -n 1)
+          for path in / /prescription /mail /planner/ /planner/appointments /planner/available "$reschedule"; do
+            curl -sf "http://localhost:8000$path" > /dev/null || { echo "Failed: $path"; docker logs demo; exit 1; }
           done
