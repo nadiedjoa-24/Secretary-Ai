@@ -15,17 +15,21 @@ First-year engineering project at [Télécom Paris](https://www.telecom-paris.fr
 
 ## Features
 
-**Voice prescriptions.** The doctor dictates a prescription and says "c'est tout" when done. The recording is transcribed, the patient name and each medication (name, dosage, duration) are extracted as structured data, and the doctor confirms out loud or dictates a correction ("il y a deux L à Ollivier"). The prescription is then generated as a PDF.
+**Voice prescriptions.** The doctor dictates a prescription in the browser. The recording is transcribed, the patient name and each medication (name, dosage, duration) are extracted as structured data, and the page shows what is still missing. The doctor can fix a mistake by voice ("il y a deux L à Ollivier"), then downloads the prescription as a PDF.
 
 **Mail assistant.** Reads the unread emails of a Gmail inbox over IMAP without marking them as read, summarizes each one in French, and sorts them into the existing Gmail labels chosen by the model. Emails can also be moved by hand from the web page.
 
-**Appointment planner.** Stores the calendar in a JSON file, with 30-minute slots on weekdays from 8:00 to 12:00 and 14:00 to 18:00, and rejects overlapping bookings. The rescheduling agent talks with the patient through the microphone, only offers free slots, extracts the new date once the patient has explicitly confirmed it, and updates the calendar.
+**Appointment planner.** Stores the calendar in a JSON file, with 30-minute slots on weekdays from 8:00 to 12:00 and 14:00 to 18:00, and rejects overlapping bookings. The rescheduling agent holds a spoken conversation with the patient, only offers free slots, extracts the new date once the patient has explicitly confirmed it, and checks that the slot is still free before updating the calendar.
+
+Every voice interaction also accepts typed text, so the app can be tried without a microphone.
 
 ## How it works
 
-Every agent talks to the models through a common interface, `BaseAIModel` (`basic`, `reflexion`, `parse`, `tts`, `stt`), so the backend can be swapped without touching the agents:
+The browser records the microphone with the `MediaRecorder` API and sends the audio to the Flask server, which transcribes it and returns the agent's answer, with its speech synthesis played back in the page.
 
-- `APIClient` uses the OpenAI API for chat, transcription (`gpt-4o-mini-transcribe`) and structured outputs, and Google Cloud Text-to-Speech for a French voice.
+Every agent talks to the models through a common interface, `BaseAIModel` (`basic`, `reflexion`, `parse`, `synthesize`, `transcribe`), so the backend can be swapped without touching the agents:
+
+- `APIClient` uses the OpenAI API for chat, transcription (`gpt-4o-mini-transcribe`), structured outputs and speech synthesis. Google Cloud Text-to-Speech can be used instead for the French voice.
 - `LocalClient` is an experimental implementation running Hugging Face models locally (Whisper, MMS-TTS). It keeps patient data on the machine but is not wired into the agents yet.
 
 ```
@@ -33,16 +37,17 @@ secretary_ai/
   config.py                  paths and environment variables
   ai/
     base_model.py            BaseAIModel interface and Message
-    api_client.py            OpenAI + Google Cloud TTS backend
+    api_client.py            OpenAI and Google Cloud TTS backend
     local_client.py          experimental Hugging Face backend
-    audio_controller.py      microphone recording and playback
+    audio_controller.py      local microphone for the command line mode
   agents/
-    prescription_agent.py    dictation, extraction, confirmation, PDF
+    prescription_agent.py    extraction, corrections and PDF
     mail_handler.py          Gmail access over IMAP and SMTP
+    demo_mailbox.py          fictional mailbox for the public demo
     mail_agent.py            email summaries and sorting
     planner_controller.py    JSON calendar and free slots
-    planner_agent.py         voice rescheduling agent
-web/                         Flask app, templates and stylesheet
+    planner_agent.py         rescheduling conversation
+web/                         Flask app, templates, stylesheet and recording script
 planning_json/2025.json      demo calendar with fictional patients
 tests/                       pytest suite, no API key needed
 ```
@@ -51,7 +56,7 @@ The report on the societal and environmental impact of the project (data privacy
 
 ## Getting started
 
-Requirements: Python 3.10 or later, a microphone and speakers for the voice features, an OpenAI API key, and for the mail assistant a Gmail account with an [app password](https://myaccount.google.com/apppasswords). French speech synthesis uses Google Cloud Text-to-Speech, which needs a service account key.
+Requirements: Python 3.10 or later, an OpenAI API key and, for the mail assistant, a Gmail account with an [app password](https://myaccount.google.com/apppasswords). Setting `DEMO_MODE=1` replaces Gmail with a fictional mailbox.
 
 ```bash
 git clone https://github.com/nadiedjoa-24/Secretary-Ai.git
@@ -63,9 +68,17 @@ cp .env.example .env             # then fill in your keys
 python -m web.app
 ```
 
-The app runs on http://127.0.0.1:5000. Commands must be run from the repository root. Each agent can also be tried from the terminal, for example `python -m secretary_ai.agents.prescription_agent`.
+The app runs on http://127.0.0.1:5000, and must be started from the repository root. Browsers only give microphone access to `localhost` or HTTPS pages.
 
-To try the experimental local backend, install `requirements-local.txt` instead.
+The agents can also run in the terminal with the local microphone and speakers, for example `python -m secretary_ai.agents.prescription_agent`. This mode needs `requirements-cli.txt` (PyAudio). The experimental local backend needs `requirements-local.txt`.
+
+## Deployment
+
+The repository ships a `Dockerfile` and a Render blueprint (`render.yaml`) for a public demo. The demo mode uses the fictional mailbox, limits each visitor to 30 AI requests per hour, and resets the calendar whenever the container restarts.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/nadiedjoa-24/Secretary-Ai)
+
+Render asks for an `OPENAI_API_KEY`. Setting a monthly budget on the OpenAI project caps the cost of a public demo.
 
 ## Tests
 
@@ -74,11 +87,11 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-The tests cover the calendar logic, the rescheduling slots, the prescription model and PDF generation, and every web route, using fake agents so that no API key, microphone or mailbox is needed.
+The tests cover the calendar logic, the rescheduling conversation, the prescription model and PDF generation, the demo mailbox, and every web route, using fake agents so that no API key, microphone or mailbox is needed. On each push, GitHub Actions also builds the Docker image and checks that the demo starts.
 
 ## Limitations
 
-This is a prototype, not a medical product. The voice features use the microphone and speakers of the machine running the server, so the web app is meant for a local demo by a single user. There is no authentication, prescriptions do not carry the doctor's identifiers, and the calendar is a demo file for the year 2025.
+This is a prototype, not a medical product. There is no authentication, prescriptions do not carry the doctor's identifiers, and the calendar is a demo file for the year 2025. Conversations and rate limits are kept in memory, so the app runs as a single process.
 
 ## Authors
 

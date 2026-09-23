@@ -90,6 +90,18 @@ def test_week_views_start_on_monday(controller):
     assert week[DAY.weekday()] == [make_appointment(time(11))]
 
 
+def test_appointment_outside_the_planning_year_is_rejected(controller):
+    with pytest.raises(ValueError, match="2025"):
+        controller.add_appointment(make_appointment(time(10), day=date(2026, 3, 5)))
+
+
+def test_other_years_have_neither_appointments_nor_slots(controller):
+    controller.add_appointment(make_appointment(time(10)))
+
+    assert controller.get_day_appointments(date(2026, 3, 5)) == []
+    assert controller.get_day_available_timeslots(date(2026, 3, 5)) == []
+
+
 def test_no_slots_on_weekends(controller):
     assert controller.get_day_available_timeslots(date(2025, 3, 8)) == []
     assert controller.get_day_available_timeslots(date(2025, 3, 9)) == []

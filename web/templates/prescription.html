@@ -3,68 +3,118 @@
 {% block title %}Générer une ordonnance - Secretary AI{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h1>Générer une ordonnance vocale</h1>
+<div class="card card-wide">
+    <h1>Générer une ordonnance</h1>
+    <p class="subtitle">Dictez le nom du patient, puis chaque médicament avec sa posologie et sa durée.</p>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-    {% if category == "file" %}
-    <div class="flash flash-success">
-        <a href="{{ url_for('download_prescription', filename=message) }}" download>
-            Télécharger l'ordonnance générée ({{ message }})
-        </a>
+    <div class="button-row">
+        <button type="button" id="dictate" class="btn">Commencer la dictée</button>
     </div>
-    {% else %}
-    <div class="flash flash-{{ category }}">{{ message }}</div>
-    {% endif %}
-    {% endfor %}
-    {% endwith %}
-
-    <div id="voice-loader" class="voice-loader">
-        <div class="pulse-dot"></div>
-        Enregistrement en cours
-    </div>
-
-    <form method="post" class="button-row">
-        <button type="submit" id="start-btn" class="btn">Démarrer la dictée</button>
-        <button type="button" id="stop-btn" class="btn btn-danger">Arrêter l'enregistrement</button>
+    <form id="dictation-form" class="text-input">
+        <input name="text" autocomplete="off" aria-label="Dictée au clavier"
+            placeholder="Ou tapez : Pierre Durand, Doliprane 1 g matin et soir pendant 5 jours">
+        <button type="submit" class="btn btn-small">Analyser</button>
     </form>
 
-    {% if infos %}
-    <div class="flash flash-info text-left">
-        <b>Patient :</b> {{ infos.patient }}<br>
-        <b>Médicaments :</b>
-        <ul>
-            {% for med in infos.medications %}
-            <li><b>{{ med.name }}</b> : {{ med.dosage }}, pendant {{ med.duration }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
+    <p id="status" class="status" role="status"></p>
 
-    {% if retry %}
-    <div class="flash {{ 'flash-info' if retry == 'after_success' else 'flash-danger' }}">
-        Voulez-vous dicter une nouvelle ordonnance ?
-    </div>
-    <form method="post" class="button-row">
-        <button name="retry" value="oui" type="submit" class="btn">Oui, recommencer</button>
-        <button name="retry" value="non" type="submit" class="btn btn-danger">Non, arrêter</button>
-    </form>
-    {% endif %}
+    <section id="result" hidden>
+        <div class="flash flash-info text-left">
+            <p class="muted">Compris : « <span id="heard"></span> »</p>
+            <b>Patient :</b> <span id="patient"></span><br>
+            <b>Médicaments :</b>
+            <ul id="medications"></ul>
+        </div>
+        <div id="missing" class="flash flash-danger" hidden></div>
+
+        <div class="button-row">
+            <button type="button" id="generate" class="btn">Générer le PDF</button>
+            <button type="button" id="correct" class="btn btn-secondary">Corriger à la voix</button>
+        </div>
+        <form id="correction-form" class="text-input">
+            <input name="text" autocomplete="off" aria-label="Correction au clavier"
+                placeholder="Ou tapez une correction : il y a deux L à Ollivier">
+            <button type="submit" class="btn btn-small">Corriger</button>
+        </form>
+
+        <div id="download" class="flash flash-success" hidden>
+            <a id="download-link" download>Télécharger l'ordonnance</a>
+        </div>
+    </section>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='voice.js') }}"></script>
 <script>
-    const loader = document.getElementById("voice-loader");
+    const status = document.getElementById("status");
+    const buttons = document.querySelectorAll("button");
+    const generate = document.getElementById("generate");
+    let complete = false;
 
-    document.getElementById("start-btn").addEventListener("click", () => {
-        loader.style.display = "flex";
-    });
+    function setBusy(message) {
+        status.textContent = message;
+        buttons.forEach((button) => { button.disabled = Boolean(message); });
+        if (!message) generate.disabled = !complete;
+    }
 
-    document.getElementById("stop-btn").addEventListener("click", () => {
-        fetch("{{ url_for('stop_recording') }}", { method: "POST" });
-        loader.style.display = "none";
+    function showPrescription(data) {
+        document.getElementById("result").hidden = false;
+        document.getElementById("download").hidden = true;
+        document.getElementById("heard").textContent = data.heard;
+
+        const prescription = data.prescription || { patient: "", medications: [] };
+        document.getElementById("patient").textContent = prescription.patient || "non précisé";
+        const list = document.getElementById("medications");
+        list.replaceChildren(...prescription.medications.map((medication) => {
+            const item = document.createElement("li");
+            item.textContent = `${medication.name || "?"} : ${medication.dosage || "posologie ?"}, ` +
+                `pendant ${medication.duration || "durée ?"}`;
+            return item;
+        }));
+
+        const missing = document.getElementById("missing");
+        complete = data.missing.length === 0;
+        missing.hidden = complete;
+        missing.textContent = `Il manque ${data.missing.join(", ")}. Corrigez ou recommencez la dictée.`;
+        generate.disabled = !complete;
+    }
+
+    async function send(url, payload) {
+        setBusy("Analyse en cours…");
+        try {
+            const data = await postToApi(url, payload);
+            setBusy("");
+            showPrescription(data);
+        } catch (error) {
+            setBusy("");
+            status.textContent = error.message;
+        }
+    }
+
+    const showError = (message) => { status.textContent = message; };
+    const labels = (idle) => ({ idle, recording: "Terminer l'enregistrement" });
+
+    bindRecordButton(document.getElementById("dictate"), labels("Commencer la dictée"),
+        (audio) => send("{{ url_for('prescription_dictation') }}", { audio }), showError);
+    bindTextForm(document.getElementById("dictation-form"),
+        (text) => send("{{ url_for('prescription_dictation') }}", { text }));
+    bindRecordButton(document.getElementById("correct"), labels("Corriger à la voix"),
+        (audio) => send("{{ url_for('prescription_correction') }}", { audio }), showError);
+    bindTextForm(document.getElementById("correction-form"),
+        (text) => send("{{ url_for('prescription_correction') }}", { text }));
+
+    generate.addEventListener("click", async () => {
+        setBusy("Génération du PDF…");
+        try {
+            const data = await postToApi("{{ url_for('prescription_pdf') }}");
+            document.getElementById("download-link").href = data.url;
+            document.getElementById("download").hidden = false;
+            setBusy("");
+        } catch (error) {
+            setBusy("");
+            status.textContent = error.message;
+        }
     });
 </script>
 {% endblock %}

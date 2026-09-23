@@ -30,6 +30,15 @@ def test_prescription_is_complete_only_when_every_field_is_filled():
     ).is_complete()
 
 
+def test_missing_fields_are_worded_for_the_user():
+    prescription = Prescription(
+        patient="", medications=[Medication(name="Doliprane", dosage="", duration="5 jours")]
+    )
+
+    assert prescription.missing_fields() == ["le nom du patient", "la posologie de Doliprane"]
+    assert Prescription(patient="Pierre Durand", medications=[]).missing_fields() == ["au moins un médicament"]
+
+
 def test_summary_lists_each_medication():
     summary = Prescription(patient="Pierre Durand", medications=[DOLIPRANE]).summary()
 
@@ -50,10 +59,13 @@ def test_generate_pdf_writes_inside_the_prescriptions_folder(tmp_path, monkeypat
     monkeypatch.setattr(prescription_agent, "PRESCRIPTIONS_DIR", tmp_path)
     agent = PrescriptionAgent(client=object(), audio=object())
 
-    path = agent.generate_pdf(Prescription(patient="../Pierre Durand", medications=[DOLIPRANE]))
+    prescription = Prescription(patient="../Pierre Durand", medications=[DOLIPRANE])
+    first, second = agent.generate_pdf(prescription), agent.generate_pdf(prescription)
 
-    assert path == tmp_path / "ordonnance_Pierre_Durand.pdf"
-    assert path.read_bytes().startswith(b"%PDF")
+    assert first.parent == tmp_path
+    assert first.name.startswith("ordonnance_Pierre_Durand_")
+    assert first != second
+    assert first.read_bytes().startswith(b"%PDF")
 
 
 def test_generate_pdf_refuses_an_incomplete_prescription(tmp_path, monkeypatch):

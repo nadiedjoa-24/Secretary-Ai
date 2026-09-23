@@ -18,11 +18,24 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install PortAudio, needed to build PyAudio
-        run: sudo apt-get update && sudo apt-get install -y portaudio19-dev
-
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
       - name: Run tests
         run: pytest
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the demo image
+        run: docker build -t secretary-ai .
+
+      - name: Start the demo and check that every page responds
+        run: |
+          docker run -d --name demo -p 8000:8000 -e OPENAI_API_KEY=placeholder secretary-ai
+          for i in $(seq 1 30); do curl -sf http://localhost:8000/ > /dev/null && break; sleep 1; done
+          for path in / /prescription /mail "/planner/appointments?month=1" /planner/reschedule/0; do
+            curl -sf "http://localhost:8000$path" > /dev/null || { docker logs demo; exit 1; }
+          done

@@ -74,6 +74,8 @@ class PlannerController:
         return start, start + self.APPOINTMENT_DURATION
 
     def add_appointment(self, appointment: Appointment) -> None:
+        if appointment.date.year != self.year:
+            raise ValueError(f"Appointment outside the {self.year} planning")
         appointment.start_time = appointment.start_time.replace(tzinfo=None)
         day_appointments = self.planning.setdefault(appointment.date.month, {}).setdefault(appointment.date.day, [])
         new_start, new_end = self._interval(appointment)
@@ -97,12 +99,14 @@ class PlannerController:
         return sorted(appointments, key=lambda a: (a.date, a.start_time.replace(tzinfo=None)))
 
     def get_day_appointments(self, day: date) -> List[Appointment]:
+        if day.year != self.year:
+            return []
         appointments = self.planning.get(day.month, {}).get(day.day, [])
         return sorted(appointments, key=lambda appointment: appointment.start_time)
 
     def get_day_available_timeslots(self, day: date) -> List[datetime]:
         """Free 30-minute slots within working hours: weekdays, 08:00-12:00 and 14:00-18:00."""
-        if day.weekday() >= 5:
+        if day.year != self.year or day.weekday() >= 5:
             return []
         booked = [self._interval(appointment) for appointment in self.get_day_appointments(day)]
         slots = []

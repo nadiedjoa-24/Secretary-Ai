@@ -1,19 +1,21 @@
 import logging
 import re
-import threading
 import unicodedata
+import uuid
 from datetime import date
 from pathlib import Path
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from pydantic import BaseModel
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from secretary_ai.ai.api_client import APIClient
-from secretary_ai.ai.audio_controller import AudioController
 from secretary_ai.ai.base_model import BaseAIModel, Message
 from secretary_ai.config import PRESCRIPTIONS_DIR
+
+if TYPE_CHECKING:
+    from secretary_ai.ai.audio_controller import AudioController
 
 logger = logging.getLogger(__name__)
 
@@ -55,10 +57,23 @@ class Prescription(BaseModel):
     patient: str
     medications: List[Medication]
 
+    def missing_fields(self) -> List[str]:
+        """What still has to be dictated, worded for the French user interface."""
+        missing = [] if self.patient else ["le nom du patient"]
+        if not self.medications:
+            missing.append("au moins un médicament")
+        for medication in self.medications:
+            label = medication.name or "un médicament"
+            if not medication.name:
+                missing.append("le nom d'un médicament")
+            if not medication.dosage:
+                missing.append(f"la posologie de {label}")
+            if not medication.duration:
+                missing.append(f"la durée de {label}")
+        return missing
+
     def is_complete(self) -> bool:
-        return bool(self.patient and self.medications) and all(
-            m.name and m.dosage and m.duration for m in self.medications
-        )
+        return not self.missing_fields()
 
     def summary(self) -> str:
         lines = [f"Patient : {self.patient}", "Médicaments prescrits :"]
@@ -74,9 +89,21 @@ def safe_filename(text: str) -> str:
 class PrescriptionAgent:
     """Turns a doctor's spoken dictation into a PDF prescription."""
 
-    def __init__(self, client: Optional[BaseAIModel] = None, audio: Optional[AudioController] = None):
+    def __init__(self, client: Optional[BaseAIModel] = None, audio: Optional["AudioController"] = None):
         self.client = client or APIClient()
-        self.audio = audio or AudioController()
+        self._audio = audio
+
+    @property
+    def audio(self) -> "AudioController":
+        """Local microphone and speakers, only used by the command line version."""
+        if self._audio is None:
+            # Imported here because PyAudio is an optional dependency (requirements-cli.txt).
+            from secretary_ai.ai.audio_controller import AudioController
+            self._audio = AudioController()
+        return self._audio
+
+    def transcribe(self, audio: bytes, filename: str) -> str:
+        return self.client.transcribe(audio, filename)
 
     def speak(self, text: str) -> None:
         self.audio.play(self.client.tts(text))
@@ -88,21 +115,15 @@ class PrescriptionAgent:
             logger.exception("Speech recognition failed.")
             return ""
 
-    def record_dictation(self, stop_flag: Optional[threading.Event] = None) -> str:
-        """Transcribe the dictation until the doctor says "c'est tout" or `stop_flag` is set."""
+    def record_dictation(self) -> str:
+        """Transcribe the microphone until the doctor says "c'est tout"."""
         segments = []
-        while not (stop_flag and stop_flag.is_set()):
-            audio_path = self.audio.listen()
-            if stop_flag and stop_flag.is_set():
-                break
-            text = self.client.stt(audio_path).content
+        while True:
+            text = self.client.stt(self.audio.listen()).content
             logger.info("Transcribed: %s", text)
             if any(word in text.lower() for word in STOP_WORDS):
-                break
+                return " ".join(segments)
             segments.append(text)
-        if stop_flag:
-            stop_flag.clear()
-        return " ".join(segments)
 
     def extract_prescription(self, transcript: str) -> Optional[Prescription]:
         try:
@@ -141,7 +162,8 @@ class PrescriptionAgent:
             raise ValueError("The prescription is incomplete.")
 
         PRESCRIPTIONS_DIR.mkdir(parents=True, exist_ok=True)
-        path = PRESCRIPTIONS_DIR / f"ordonnance_{safe_filename(prescription.patient)}.pdf"
+        # The random suffix keeps two prescriptions for the same patient from overwriting each other.
+        path = PRESCRIPTIONS_DIR / f"ordonnance_{safe_filename(prescription.patient)}_{uuid.uuid4().hex[:8]}.pdf"
         pdf = canvas.Canvas(str(path), pagesize=A4)
         _, height = A4
 

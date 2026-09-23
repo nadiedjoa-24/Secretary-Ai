@@ -1,0 +1,10 @@
+.git
+.github
+.env
+google_cloud_tts_key.json
+**/__pycache__
+.pytest_cache
+audio_recordings
+prescriptions
+docs
+tests

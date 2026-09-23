@@ -5,6 +5,9 @@
 {% block content %}
 <div class="card card-wide">
     <h1>Gestion des mails</h1>
+    {% if demo_mode %}
+    <p class="demo-note">Boîte de démonstration : les mails sont fictifs et reviennent une fois tous triés.</p>
+    {% endif %}
 
     <div class="button-row">
         <form action="{{ url_for('mail') }}" method="get" onsubmit="showLoader()">
@@ -27,6 +30,7 @@
     <div class="mail-card">
         <b>Expéditeur :</b> {{ mail.sender }}<br>
         <b>Date :</b> {{ mail.date }}<br>
+        <b>Objet :</b> {{ mail.subject }}<br>
         <b>Résumé :</b> {{ mail.summary }}
         <form method="post">
             <input type="hidden" name="email_id" value="{{ mail.id }}">

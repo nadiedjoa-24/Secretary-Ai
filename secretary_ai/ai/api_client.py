@@ -5,7 +5,7 @@ from google.cloud import texttospeech
 from pydantic import BaseModel
 
 from secretary_ai.ai.base_model import BaseAIModel, Message
-from secretary_ai.config import AUDIO_DIR, GOOGLE_TTS_KEY_FILE, require_env
+from secretary_ai.config import GOOGLE_TTS_KEY_FILE, TTS_ENGINE, require_env
 
 OPENAI_TTS = "openai"
 GOOGLE_TTS = "google"
@@ -16,9 +16,11 @@ def _as_dicts(messages: List[Message | dict]) -> List[dict]:
 
 
 class APIClient(BaseAIModel):
-    """BaseAIModel backed by the OpenAI API, with Google Cloud Text-to-Speech for French voice output."""
+    """BaseAIModel backed by the OpenAI API. Speech synthesis uses OpenAI or Google Cloud Text-to-Speech."""
 
-    def __init__(self, api_key: Optional[str] = None, tts_engine: str = GOOGLE_TTS):
+    def __init__(self, api_key: Optional[str] = None, tts_engine: str = TTS_ENGINE):
+        if tts_engine not in (OPENAI_TTS, GOOGLE_TTS):
+            raise ValueError(f"Unknown TTS engine {tts_engine!r}, expected {OPENAI_TTS!r} or {GOOGLE_TTS!r}.")
         self.client = openai.OpenAI(api_key=api_key or require_env("OPENAI_API_KEY"))
         self.tts_engine = tts_engine
 
@@ -46,24 +48,17 @@ class APIClient(BaseAIModel):
             raise ValueError("The OpenAI API returned no parsable output.")
         return response.output_parsed
 
-    def tts(self, text: str, filename: str = "output.wav") -> str:
-        AUDIO_DIR.mkdir(parents=True, exist_ok=True)
-        output_path = AUDIO_DIR / filename
-        if self.tts_engine == OPENAI_TTS:
-            audio = self._openai_tts(text)
-        elif self.tts_engine == GOOGLE_TTS:
-            audio = self._google_tts(text)
-        else:
-            raise ValueError(f"Unknown TTS engine {self.tts_engine!r}, expected {OPENAI_TTS!r} or {GOOGLE_TTS!r}.")
-        output_path.write_bytes(audio)
-        return str(output_path)
+    def synthesize(self, text: str) -> bytes:
+        if self.tts_engine == GOOGLE_TTS:
+            return self._google_tts(text)
+        return self._openai_tts(text)
 
     def _openai_tts(self, text: str) -> bytes:
         response = self.client.audio.speech.create(
             model="gpt-4o-mini-tts",
             voice="alloy",
             input=text,
-            instructions="Speak in a neutral, professional tone, like a medical secretary.",
+            instructions="Speak French with a neutral, professional tone, like a medical secretary.",
             response_format="wav",
         )
         return response.content
@@ -85,12 +80,15 @@ class APIClient(BaseAIModel):
             raise ValueError("Empty response from Google Cloud Text-to-Speech.")
         return response.audio_content
 
-    def stt(self, audio_path: str) -> Message:
-        with open(audio_path, "rb") as audio_file:
-            response = self.client.audio.transcriptions.create(model="gpt-4o-mini-transcribe", file=audio_file)
+    def transcribe(self, audio: bytes, filename: str = "audio.wav") -> str:
+        response = self.client.audio.transcriptions.create(
+            model="gpt-4o-mini-transcribe",
+            file=(filename, audio),
+            language="fr",
+        )
         if not response.text:
             raise ValueError("Empty transcription from the OpenAI API.")
-        return Message(role="user", content=response.text)
+        return response.text
 
 
 if __name__ == "__main__":

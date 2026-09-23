@@ -1,4 +1,5 @@
 """Experimental BaseAIModel running Hugging Face models locally. Not wired into the agents yet."""
+import io
 import json
 from typing import List
 
@@ -7,7 +8,6 @@ from pydantic import BaseModel
 from transformers import pipeline
 
 from secretary_ai.ai.base_model import BaseAIModel, Message
-from secretary_ai.config import AUDIO_DIR
 
 
 class LocalClient(BaseAIModel):
@@ -39,17 +39,16 @@ class LocalClient(BaseAIModel):
         )
         return data_model.model_validate_json(self._generate(prompt, max_length=500))
 
-    def tts(self, text: str, filename: str = "output.wav") -> str:
-        AUDIO_DIR.mkdir(parents=True, exist_ok=True)
-        output_path = AUDIO_DIR / filename
+    def synthesize(self, text: str) -> bytes:
         output = self.tts_pipe(text)
-        sf.write(output_path, output["audio"].squeeze(), output["sampling_rate"])
-        return str(output_path)
+        buffer = io.BytesIO()
+        sf.write(buffer, output["audio"].squeeze(), output["sampling_rate"], format="WAV")
+        return buffer.getvalue()
 
-    def stt(self, audio_path: str) -> Message:
-        result = self.asr_pipe(audio_path)
-        text = result["text"] if isinstance(result, dict) else result[0]["text"]
-        return Message(role="user", content=text)
+    def transcribe(self, audio: bytes, filename: str = "audio.wav") -> str:
+        # The pipeline decodes compressed formats such as webm through ffmpeg.
+        result = self.asr_pipe(audio, generate_kwargs={"language": "french"})
+        return result["text"] if isinstance(result, dict) else result[0]["text"]
 
 
 if __name__ == "__main__":

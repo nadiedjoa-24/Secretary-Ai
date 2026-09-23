@@ -8,6 +8,10 @@
 <div class="card">
     <h1>Secretary AI</h1>
     <p class="subtitle">Assistant IA pour le secrétariat médical</p>
+    {% if demo_mode %}
+    <p class="demo-note">Version de démonstration : la boîte mail et les patients sont fictifs,
+        et le planning est réinitialisé régulièrement. L'assistant parle français.</p>
+    {% endif %}
     <a class="btn btn-block" href="{{ url_for('prescription') }}">Générer une ordonnance</a>
     <a class="btn btn-block" href="{{ url_for('mail') }}">Gérer les mails</a>
     <a class="btn btn-block" href="{{ url_for('planner_index') }}">Accéder à l'agenda</a>

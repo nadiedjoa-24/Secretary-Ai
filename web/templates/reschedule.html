@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Reprogrammer un rendez-vous - Secretary AI{% endblock %}
+
+{% block content %}
+<div class="card card-wide">
+    <h1>Reprogrammer un rendez-vous</h1>
+    {% set when = day_label(appointment.date.month, appointment.date.day)|lower ~ " " ~ appointment.date.month|month_name %}
+    <p class="subtitle">
+        {{ appointment.name }} {{ appointment.surname }}, {{ when }} à {{ appointment.start_time.strftime('%H:%M') }}
+        {%- if appointment.description %} ({{ appointment.description }}){% endif %}
+    </p>
+    <p class="muted">Vous jouez le patient : répondez à l'assistante à la voix ou au clavier.</p>
+
+    <div id="chat" class="chat" aria-live="polite"></div>
+    <p id="status" class="status" role="status"></p>
+
+    <div id="controls">
+        <div class="button-row">
+            <button type="button" id="speak" class="btn">Répondre à la voix</button>
+        </div>
+        <form id="message-form" class="text-input">
+            <input name="text" autocomplete="off" aria-label="Réponse au clavier" placeholder="Ou tapez votre réponse">
+            <button type="submit" class="btn btn-small">Envoyer</button>
+        </form>
+    </div>
+
+    <div id="done" class="flash flash-success" hidden>
+        <span id="done-text"></span> <a id="done-link">Voir l'agenda</a>
+    </div>
+
+    <a class="btn btn-secondary" href="{{ url_for('show_appointments', month=appointment.date.month) }}">
+        Retour aux rendez-vous
+    </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='voice.js') }}"></script>
+<script>
+    const chat = document.getElementById("chat");
+    const status = document.getElementById("status");
+    const controls = document.querySelectorAll("#controls button, #controls input");
+    let conversationId = null;
+
+    function setBusy(message) {
+        status.textContent = message;
+        controls.forEach((control) => { control.disabled = Boolean(message); });
+    }
+
+    function addBubble(role, text, audio) {
+        const bubble = document.createElement("div");
+        bubble.className = `bubble bubble-${role}`;
+        bubble.textContent = text;
+        if (audio) {
+            const replay = document.createElement("button");
+            replay.type = "button";
+            replay.className = "replay";
+            replay.textContent = "Écouter";
+            replay.addEventListener("click", () => playAudio(audio));
+            bubble.append(" ", replay);
+            playAudio(audio);
+        }
+        chat.append(bubble);
+    }
+
+    async function call(url, payload) {
+        try {
+            const data = await postToApi(url, payload);
+            setBusy("");
+            return data;
+        } catch (error) {
+            setBusy("");
+            status.textContent = error.message;
+            return null;
+        }
+    }
+
+    async function sendMessage(payload) {
+        setBusy("L'assistante réfléchit…");
+        const data = await call(`/api/reschedule/${conversationId}/message`, payload);
+        if (!data) return;
+        addBubble("patient", data.patient);
+        addBubble("agent", data.reply, data.audio);
+        if (data.done) {
+            document.getElementById("controls").hidden = true;
+            document.getElementById("done-text").textContent = data.summary;
+            document.getElementById("done-link").href = data.next;
+            document.getElementById("done").hidden = false;
+        }
+    }
+
+    async function start() {
+        setBusy("L'assistante prépare la conversation…");
+        const data = await call("{{ url_for('reschedule_start', appt_id=appt_id) }}");
+        if (!data) return;
+        conversationId = data.conversation_id;
+        addBubble("agent", data.reply, data.audio);
+    }
+
+    bindRecordButton(document.getElementById("speak"),
+        { idle: "Répondre à la voix", recording: "Terminer ma réponse" },
+        (audio) => sendMessage({ audio }), (message) => { status.textContent = message; });
+    bindTextForm(document.getElementById("message-form"), (text) => sendMessage({ text }));
+    start();
+</script>
+{% endblock %}
