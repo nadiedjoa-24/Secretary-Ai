@@ -1,6 +1,6 @@
 # Secretary AI
 
-[![Tests](https://github.com/nadiedjoa-24/Secretary-Ai/actions/workflows/tests.yml/badge.svg)](https://github.com/nadiedjoa-24/Secretary-Ai/actions/workflows/tests.yml)
+[![Tests](https://github.com/tnadiedjoa/Secretary-Ai/actions/workflows/tests.yml/badge.svg)](https://github.com/tnadiedjoa/Secretary-Ai/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Voice and language model assistants that take over repetitive tasks of a medical secretary: writing prescriptions from a doctor's dictation, triaging the office inbox and rescheduling appointments over a spoken conversation.
@@ -61,7 +61,7 @@ The report on the societal and environmental impact of the project (data privacy
 Requirements: Python 3.10 or later, an OpenAI API key or a free Groq API key (set `AI_PROVIDER=groq` and `TTS_ENGINE=browser`) and, for the mail assistant, a Gmail account with an [app password](https://myaccount.google.com/apppasswords). Setting `DEMO_MODE=1` replaces Gmail with a fictional mailbox and fills the agenda with fictional appointments, from 20 months ago to 4 months ahead, regenerated at each start.
 
 ```bash
-git clone https://github.com/nadiedjoa-24/Secretary-Ai.git
+git clone https://github.com/tnadiedjoa/Secretary-Ai.git
 cd Secretary-Ai
 python -m venv .venv
 source .venv/bin/activate        # on Windows: .venv\Scripts\activate
@@ -78,7 +78,7 @@ The agents can also run in the terminal with the local microphone and speakers, 
 
 The repository ships a `Dockerfile` and a Render blueprint (`render.yaml`) for a public demo. The demo mode uses the fictional mailbox and agenda, limits each visitor to 30 AI requests per hour, and resets the agenda whenever the container restarts.
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/nadiedjoa-24/Secretary-Ai)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/tnadiedjoa/Secretary-Ai)
 
 The blueprint runs on Groq's free tier with the browser's voice, so the demo costs nothing: Render only asks for a `GROQ_API_KEY`.
 
@@ -100,7 +100,7 @@ This is a prototype, not a medical product. There is no authentication, prescrip
 | Name | GitHub |
 | --- | --- |
 | Agshay Nadanakumar | [@agshayn](https://github.com/agshayn) |
-| Théophile Nadiedjoa | [@nadiedjoa-24](https://github.com/nadiedjoa-24) |
+| Théophile Nadiedjoa | [@tnadiedjoa](https://github.com/tnadiedjoa) |
 | Antoine Ollivier | [@antoineolr](https://github.com/antoineolr) |
 | Yanic Röthlingshöfer | [@yrothlin-03](https://github.com/yrothlin-03) |
 | Yifan Wang | [@NafiyTP](https://github.com/NafiyTP) |
