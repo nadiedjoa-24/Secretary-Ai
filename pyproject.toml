@@ -1,3 +1,31 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "secretary-ai"
+version = "1.0.0"
+description = "Voice and language model assistants for a medical secretary"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dynamic = ["dependencies"]
+
+[project.optional-dependencies]
+# Tests
+dev = ["pytest>=8.0"]
+# Local microphone and speakers for the command line mode
+cli = ["SpeechRecognition>=3.14", "PyAudio>=0.2.14"]
+# Experimental backend running Hugging Face models locally
+local = ["transformers>=4.40", "torch>=2.2", "soundfile>=0.12"]
+
+[tool.setuptools.dynamic]
+# requirements.txt stays the single list of runtime dependencies, also used by the Dockerfile.
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.packages.find]
+include = ["secretary_ai*", "web*"]
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]

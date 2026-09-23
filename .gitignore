@@ -3,6 +3,8 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 .venv/
+*.egg-info/
+build/
 
 .env
 google_cloud_tts_key.json

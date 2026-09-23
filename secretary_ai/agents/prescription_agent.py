@@ -105,7 +105,7 @@ class PrescriptionAgent:
     def audio(self) -> "AudioController":
         """Local microphone and speakers, only used by the command line version."""
         if self._audio is None:
-            # Imported here because PyAudio is an optional dependency (requirements-cli.txt).
+            # Imported here because PyAudio is an optional dependency (the "cli" extra).
             from secretary_ai.ai.audio_controller import AudioController
             self._audio = AudioController()
         return self._audio

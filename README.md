@@ -72,7 +72,7 @@ python -m web.app
 
 The app runs on http://127.0.0.1:5000, and must be started from the repository root. Browsers only give microphone access to `localhost` or HTTPS pages. Outside the demo mode the agenda starts empty; `python -m secretary_ai.agents.demo_calendar` fills it with fictional appointments.
 
-The agents can also run in the terminal with the local microphone and speakers, for example `python -m secretary_ai.agents.prescription_agent`. This mode needs `requirements-cli.txt` (PyAudio). The experimental local backend needs `requirements-local.txt`.
+The agents can also run in the terminal with the local microphone and speakers, for example `python -m secretary_ai.agents.prescription_agent`. This mode needs PyAudio, installed with `pip install -e ".[cli]"`. The experimental local backend is installed with `pip install -e ".[local]"`.
 
 ## Deployment
 
@@ -85,7 +85,7 @@ The blueprint runs on Groq's free tier with the browser's voice, so the demo cos
 ## Tests
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -e ".[dev]"
 pytest
 ```
 

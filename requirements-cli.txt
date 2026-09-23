@@ -1,3 +1,0 @@
--r requirements.txt
-SpeechRecognition>=3.14
-PyAudio>=0.2.14
