@@ -7,10 +7,10 @@ from functools import cache
 
 from flask import Flask, abort, flash, jsonify, redirect, render_template, request, send_from_directory, url_for
 
-from common.config import PRESCRIPTIONS_DIR
-from main.agents.email_agent.mail_agent.mail_agent import MailAgent
-from main.agents.planner_agent.planner_agent import PlannerAgent
-from main.agents.prescription_agent.prescription_agent import PrescriptionAgent
+from secretary_ai.agents.mail_agent import MailAgent
+from secretary_ai.agents.planner_agent import PlannerAgent
+from secretary_ai.agents.prescription_agent import PrescriptionAgent
+from secretary_ai.config import PRESCRIPTIONS_DIR
 
 PLANNING_YEAR = 2025
 MONTHS = ["janvier", "février", "mars", "avril", "mai", "juin",

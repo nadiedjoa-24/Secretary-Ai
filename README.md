@@ -1,5 +1,8 @@
 # Secretary AI
 
+[![Tests](https://github.com/nadiedjoa-24/Secretary-Ai/actions/workflows/tests.yml/badge.svg)](https://github.com/nadiedjoa-24/Secretary-Ai/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Voice and language model assistants that take over repetitive tasks of a medical secretary: writing prescriptions from a doctor's dictation, triaging the office inbox and rescheduling appointments over a spoken conversation.
 
 First-year engineering project at [Télécom Paris](https://www.telecom-paris.fr/), 2025. The user interface and the voice assistant speak French, since the project targets French medical practices; the code and documentation are in English.
@@ -26,17 +29,19 @@ Every agent talks to the models through a common interface, `BaseAIModel` (`basi
 - `LocalClient` is an experimental implementation running Hugging Face models locally (Whisper, MMS-TTS). It keeps patient data on the machine but is not wired into the agents yet.
 
 ```
-common/
+secretary_ai/
   config.py                  paths and environment variables
   ai/
-    model/base_model.py      BaseAIModel interface and Message
+    base_model.py            BaseAIModel interface and Message
     api_client.py            OpenAI + Google Cloud TTS backend
     local_client.py          experimental Hugging Face backend
-    audio_controller/        microphone recording and playback
-main/agents/
-  prescription_agent/        dictation, extraction, confirmation, PDF
-  email_agent/               IMAP/SMTP handler and mail agent
-  planner_agent/             JSON calendar and rescheduling agent
+    audio_controller.py      microphone recording and playback
+  agents/
+    prescription_agent.py    dictation, extraction, confirmation, PDF
+    mail_handler.py          Gmail access over IMAP and SMTP
+    mail_agent.py            email summaries and sorting
+    planner_controller.py    JSON calendar and free slots
+    planner_agent.py         voice rescheduling agent
 web/                         Flask app, templates and stylesheet
 planning_json/2025.json      demo calendar with fictional patients
 tests/                       pytest suite, no API key needed
@@ -58,7 +63,7 @@ cp .env.example .env             # then fill in your keys
 python -m web.app
 ```
 
-The app runs on http://127.0.0.1:5000. Commands must be run from the repository root. Each agent can also be tried from the terminal, for example `python -m main.agents.prescription_agent.prescription_agent`.
+The app runs on http://127.0.0.1:5000. Commands must be run from the repository root. Each agent can also be tried from the terminal, for example `python -m secretary_ai.agents.prescription_agent`.
 
 To try the experimental local backend, install `requirements-local.txt` instead.
 

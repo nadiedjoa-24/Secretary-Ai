@@ -4,10 +4,10 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
-from common.ai.api_client import APIClient
-from common.ai.audio_controller.audio_controller import AudioController
-from common.ai.model.base_model import BaseAIModel, Message
-from main.agents.planner_agent.planner_controller.planner_controller import Appointment, PlannerController
+from secretary_ai.agents.planner_controller import Appointment, PlannerController
+from secretary_ai.ai.api_client import APIClient
+from secretary_ai.ai.audio_controller import AudioController
+from secretary_ai.ai.base_model import BaseAIModel, Message
 
 logger = logging.getLogger(__name__)
 

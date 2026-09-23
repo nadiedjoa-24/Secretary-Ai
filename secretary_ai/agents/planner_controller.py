@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
-from common.config import PLANNING_DIR
+from secretary_ai.config import PLANNING_DIR
 
 WORKING_HOURS = [(time(8), time(12)), (time(14), time(18))]
 

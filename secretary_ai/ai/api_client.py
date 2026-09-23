@@ -4,8 +4,8 @@ import openai
 from google.cloud import texttospeech
 from pydantic import BaseModel
 
-from common.config import AUDIO_DIR, GOOGLE_TTS_KEY_FILE, require_env
-from common.ai.model.base_model import BaseAIModel, Message
+from secretary_ai.ai.base_model import BaseAIModel, Message
+from secretary_ai.config import AUDIO_DIR, GOOGLE_TTS_KEY_FILE, require_env
 
 OPENAI_TTS = "openai"
 GOOGLE_TTS = "google"
@@ -94,7 +94,7 @@ class APIClient(BaseAIModel):
 
 
 if __name__ == "__main__":
-    from common.ai.audio_controller.audio_controller import AudioController
+    from secretary_ai.ai.audio_controller import AudioController
 
     client = APIClient()
     audio = AudioController()

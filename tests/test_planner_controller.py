@@ -2,7 +2,7 @@ from datetime import date, datetime, time
 
 import pytest
 
-from main.agents.planner_agent.planner_controller.planner_controller import Appointment, PlannerController
+from secretary_ai.agents.planner_controller import Appointment, PlannerController
 
 DAY = date(2025, 3, 5)
 

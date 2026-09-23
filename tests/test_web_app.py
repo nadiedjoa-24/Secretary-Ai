@@ -2,10 +2,10 @@ from datetime import date, time
 
 import pytest
 
-from main.agents.email_agent.mail_handler.mail_handler import ReceivedEmail
-from main.agents.planner_agent.planner_agent import PlannerAgent
-from main.agents.planner_agent.planner_controller.planner_controller import Appointment, PlannerController
-from main.agents.prescription_agent.prescription_agent import Medication, Prescription
+from secretary_ai.agents.mail_handler import ReceivedEmail
+from secretary_ai.agents.planner_agent import PlannerAgent
+from secretary_ai.agents.planner_controller import Appointment, PlannerController
+from secretary_ai.agents.prescription_agent import Medication, Prescription
 from web import app as web_app
 
 COMPLETE = Prescription(patient="Pierre Durand", medications=[Medication(name="Doliprane 1g", dosage="matin et soir", duration="5 jours")])

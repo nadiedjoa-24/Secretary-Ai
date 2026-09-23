@@ -5,7 +5,7 @@ from typing import Optional
 import pyaudio
 import speech_recognition as sr
 
-from common.config import AUDIO_DEVICE_INDEX, AUDIO_DIR
+from secretary_ai.config import AUDIO_DEVICE_INDEX, AUDIO_DIR
 
 
 class AudioController:

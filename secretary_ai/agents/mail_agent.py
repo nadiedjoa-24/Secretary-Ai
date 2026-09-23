@@ -1,9 +1,9 @@
 import logging
 from typing import List, Optional
 
-from common.ai.api_client import APIClient
-from common.ai.model.base_model import BaseAIModel, Message
-from main.agents.email_agent.mail_handler.mail_handler import MailHandler, OutgoingEmail, ReceivedEmail
+from secretary_ai.agents.mail_handler import MailHandler, OutgoingEmail, ReceivedEmail
+from secretary_ai.ai.api_client import APIClient
+from secretary_ai.ai.base_model import BaseAIModel, Message
 
 logger = logging.getLogger(__name__)
 

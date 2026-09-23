@@ -10,10 +10,10 @@ from pydantic import BaseModel
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from common.ai.api_client import APIClient
-from common.ai.audio_controller.audio_controller import AudioController
-from common.ai.model.base_model import BaseAIModel, Message
-from common.config import PRESCRIPTIONS_DIR
+from secretary_ai.ai.api_client import APIClient
+from secretary_ai.ai.audio_controller import AudioController
+from secretary_ai.ai.base_model import BaseAIModel, Message
+from secretary_ai.config import PRESCRIPTIONS_DIR
 
 logger = logging.getLogger(__name__)
 

@@ -2,8 +2,8 @@ from datetime import date, time
 
 import pytest
 
-from main.agents.planner_agent.planner_agent import PlannerAgent
-from main.agents.planner_agent.planner_controller.planner_controller import Appointment, PlannerController
+from secretary_ai.agents.planner_agent import PlannerAgent
+from secretary_ai.agents.planner_controller import Appointment, PlannerController
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 import pytest
 
-from main.agents.prescription_agent import prescription_agent
-from main.agents.prescription_agent.prescription_agent import (
+from secretary_ai.agents import prescription_agent
+from secretary_ai.agents.prescription_agent import (
     Medication,
     Prescription,
     PrescriptionAgent,

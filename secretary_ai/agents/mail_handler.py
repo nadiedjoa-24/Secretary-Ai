@@ -12,7 +12,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from common.config import require_env
+from secretary_ai.config import require_env
 
 logger = logging.getLogger(__name__)
 

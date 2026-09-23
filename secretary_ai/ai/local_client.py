@@ -6,8 +6,8 @@ import soundfile as sf
 from pydantic import BaseModel
 from transformers import pipeline
 
-from common.config import AUDIO_DIR
-from common.ai.model.base_model import BaseAIModel, Message
+from secretary_ai.ai.base_model import BaseAIModel, Message
+from secretary_ai.config import AUDIO_DIR
 
 
 class LocalClient(BaseAIModel):
