@@ -80,7 +80,7 @@ The repository ships a `Dockerfile` and a Render blueprint (`render.yaml`) for a
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/tnadiedjoa/Secretary-Ai)
 
-The blueprint runs on Groq's free tier with the browser's voice, so the demo costs nothing: Render only asks for a `GROQ_API_KEY`.
+The blueprint runs on Groq's free tier with the browser's voice, so the demo costs nothing: Render only asks for a `GROQ_API_KEY`. The live demo is redeployed automatically on every push to `master`.
 
 ## Tests
 
