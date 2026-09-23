@@ -147,7 +147,7 @@ class Mail_Agent:
 # Test example 
 
 if __name__ == "__main__":
-    mail_agent = Mail_Agent(API_KEY = "***REMOVED-OPENAI-KEY-1***")
+    mail_agent = Mail_Agent()
 
 
 

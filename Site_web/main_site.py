@@ -37,9 +37,9 @@ elif isinstance(raw, list):
 else:
     raise ValueError("Format inattendu pour 2025.json : attendu dict de dicts ou liste.")
 
-api_key = "***REMOVED-OPENAI-KEY-1***"
+api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
-    raise RuntimeError("Il faut définir la variable d'environnement API_KEY pour utiliser le backend API")
+    raise RuntimeError("Il faut définir la variable d'environnement OPENAI_API_KEY pour utiliser le backend API")
 planner = Planner_agent(backend="API", API_KEY=api_key)
 
 @app.route("/")

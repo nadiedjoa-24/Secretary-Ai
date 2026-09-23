@@ -13,23 +13,17 @@ load_dotenv()
 class Mail_Agent:
 
     IMAP_SERVER = "imap.gmail.com"
-    IMAP_PORT = 993 
-    EMAIL = "arthisow@gmail.com"
-    PASSWORD = "***REMOVED-GMAIL-APP-PASSWORD-1***" # MDP application du compte google et pas le mdp du compte (double authentification nécessaire)
-    API_KEY = "***REMOVED-OPENAI-KEY-1***"
-
-    # mail = imaplib.IMAP4_SSL(host=IMAP_SERVER, port=IMAP_PORT)
-    # mail.login(EMAIL, PASSWORD)
-
+    IMAP_PORT = 993
 
     def __init__(self):
-        self.client = openai.OpenAI(api_key = self.API_KEY)
-        # Récupère les identifiants depuis l'environnement
+        api_key = os.getenv("OPENAI_API_KEY")
         email = os.getenv("EMAIL")
         password = os.getenv("PASSWORD")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY doit être défini dans le .env")
         if not email or not password:
-            raise ValueError("EMAIL et PASSWORD doivent être définis dans l'environnement")
-        # Connexion IMAP
+            raise ValueError("EMAIL et PASSWORD doivent être définis dans le .env")
+        self.client = openai.OpenAI(api_key=api_key)
         self.mail = imaplib.IMAP4_SSL(host=self.IMAP_SERVER, port=self.IMAP_PORT)
         self.mail.login(email, password)
     

@@ -1,0 +1,17 @@
+openai
+pydantic
+python-dotenv
+transformers
+torch
+numpy
+soundfile
+speechrecognition
+pyaudio
+pygame
+reportlab
+requests
+flask
+fastapi
+uvicorn
+google-cloud-texttospeech
+elevenlabs

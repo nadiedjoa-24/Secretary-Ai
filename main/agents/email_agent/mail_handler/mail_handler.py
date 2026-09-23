@@ -9,6 +9,9 @@ from email.utils import parsedate_to_datetime
 from email.mime.text import MIMEText
 from pydantic import BaseModel
 from typing import Optional, List, Literal
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class eMail(BaseModel):
     """
@@ -45,23 +48,17 @@ class MAIL_HANDLER:
     IMAP_SERVER = "imap.gmail.com"
     IMAP_PORT = 993
 
-    def __init__(self, 
-                EMAIL: str = "arthisow@gmail.com",
-                PASSWORD: str = "***REMOVED-GMAIL-APP-PASSWORD-2***" ,
+    def __init__(self,
+                EMAIL: str = None,
+                PASSWORD: str = None,
                 ):
-        self.EMAIL = EMAIL
-        self.PASSWORD = PASSWORD
+        self.EMAIL = EMAIL or os.getenv("EMAIL")
+        self.PASSWORD = PASSWORD or os.getenv("PASSWORD")
         if not self.EMAIL:
-            try:
-                self.EMAIL = os.getenv("EMAIL")
-            except KeyError as e:
-                raise ValueError(f"EMAIL is required for IMAP connection, please provide one at instanciation or in environment :{e}")
+            raise ValueError("EMAIL doit être défini dans le .env ou passé en argument.")
         if not self.PASSWORD:
-            try:
-                self.PASSWORD = os.getenv("PASSWORD")
-            except KeyError as e:
-                raise ValueError(f"PASSWORD is required for IMAP connection, please provide one at instanciation or in environment :{e}")
-        
+            raise ValueError("PASSWORD doit être défini dans le .env ou passé en argument.")
+
         self.mailbox = None
 
         try:
@@ -244,10 +241,8 @@ class MAIL_HANDLER:
  # Test example
 
 if __name__ == "__main__":
- 
-    EMAIL = "arthisow@gmail.com"
-    PASSWORD = "***REMOVED-GMAIL-APP-PASSWORD-2***" 
-    mail_handler = MAIL_HANDLER(EMAIL, PASSWORD)
+
+    mail_handler = MAIL_HANDLER()
 
     mail_handler.get_unread_emails()
     

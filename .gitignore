@@ -1,5 +1,7 @@
-__pycache__
+__pycache__/
+*.pyc
 *.mp3
 .env
-DS_Store
+.DS_Store
 .pytest_cache
+google_cloud_tts_key.json
