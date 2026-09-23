@@ -1,20 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Créneaux libres en {{ month|month_name }} {{ year }} - Secretary AI{% endblock %}
+{% block title %}Créneaux libres en {{ month|month_label }} - Secretary AI{% endblock %}
 
 {% block content %}
 <div class="card card-wide">
-    <h1>Créneaux libres en {{ month|month_name }} {{ year }}</h1>
+    <h1>Créneaux libres en {{ month|month_label }}</h1>
+    <p class="subtitle">
+        {{ doctor }}, {{ doctors[doctor] }}.
+        Pour déplacer un rendez-vous vers l'un de ces créneaux,
+        <a href="{{ url_for('show_appointments', month=month.strftime('%Y-%m'), doctor=doctor) }}">ouvrez les rendez-vous du mois</a>
+        et cliquez sur « Reprogrammer ».
+    </p>
 
-    {% for day, times in (slots.get(month) or {}).items()|sort %}
+    {% for day, times in slots.items()|sort %}
     <div class="day">
-        <div class="day-title">{{ day_label(month, day) }}</div>
+        <div class="day-title">{{ day|day_label }}</div>
         <ul>
             <li>{{ times|join(', ') }}</li>
         </ul>
     </div>
     {% else %}
-    <div class="flash flash-info">Aucun créneau libre ce mois-ci.</div>
+    <div class="flash flash-info">
+        {{ "Ce mois est passé." if past else "Aucun créneau libre ce mois-ci." }}
+    </div>
     {% endfor %}
 
     <a class="btn btn-secondary" href="{{ url_for('planner_index') }}">Retour à l'agenda</a>

@@ -42,8 +42,11 @@ EXTRACTION_PROMPT = (
 )
 
 CORRECTION_PROMPT = (
-    "You fix the data of a prescription according to a spoken correction in French, and change nothing else.\n"
-    'Example: "il y a deux L à Olivier" turns the patient "Antoine Olivier" into "Antoine Ollivier".'
+    "You update the data of a prescription according to a correction from the doctor, in French: it either fixes "
+    "a field or adds missing information. Change nothing else.\n"
+    'Examples: "il y a deux L à Olivier" turns the patient "Antoine Olivier" into "Antoine Ollivier"; '
+    '"le patient s\'appelle Pierre Durand" fills in an empty patient name; '
+    '"Doliprane pendant 7 jours" sets the duration of the Doliprane.'
 )
 
 
@@ -84,6 +87,11 @@ class Prescription(BaseModel):
 def safe_filename(text: str) -> str:
     ascii_text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
     return re.sub(r"[^A-Za-z0-9]+", "_", ascii_text).strip("_") or "patient"
+
+
+def download_name(filename: str) -> str:
+    """Name shown to the user for a stored prescription, without its random suffix."""
+    return re.sub(r"_[0-9a-f]{8}(\.pdf)$", r"\1", filename)
 
 
 class PrescriptionAgent:
@@ -162,8 +170,10 @@ class PrescriptionAgent:
             raise ValueError("The prescription is incomplete.")
 
         PRESCRIPTIONS_DIR.mkdir(parents=True, exist_ok=True)
-        # The random suffix keeps two prescriptions for the same patient from overwriting each other.
-        path = PRESCRIPTIONS_DIR / f"ordonnance_{safe_filename(prescription.patient)}_{uuid.uuid4().hex[:8]}.pdf"
+        # The random suffix keeps prescriptions from overwriting each other and makes their URL impossible
+        # to guess. It is left out of the name of the downloaded file (see download_name).
+        path = PRESCRIPTIONS_DIR / (f"ordonnance_{safe_filename(prescription.patient)}_{date.today().isoformat()}"
+                                    f"_{uuid.uuid4().hex[:8]}.pdf")
         pdf = canvas.Canvas(str(path), pagesize=A4)
         _, height = A4
 

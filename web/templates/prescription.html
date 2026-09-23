@@ -12,7 +12,7 @@
     </div>
     <form id="dictation-form" class="text-input">
         <input name="text" autocomplete="off" aria-label="Dictée au clavier"
-            placeholder="Ou tapez : Pierre Durand, Doliprane 1 g matin et soir pendant 5 jours">
+            placeholder="Ou écrivez-la : Pierre Durand, Doliprane 1 g matin et soir pendant 5 jours">
         <button type="submit" class="btn btn-small">Analyser</button>
     </form>
 
@@ -27,13 +27,14 @@
         </div>
         <div id="missing" class="flash flash-danger" hidden></div>
 
+        <p class="muted">Une erreur ou un oubli ? Dites ou écrivez ce qu'il faut changer ou ajouter, puis générez le PDF.</p>
         <div class="button-row">
             <button type="button" id="generate" class="btn">Générer le PDF</button>
             <button type="button" id="correct" class="btn btn-secondary">Corriger à la voix</button>
         </div>
         <form id="correction-form" class="text-input">
             <input name="text" autocomplete="off" aria-label="Correction au clavier"
-                placeholder="Ou tapez une correction : il y a deux L à Ollivier">
+                placeholder="Exemple : le Doliprane, c'est pendant 7 jours et non 5">
             <button type="submit" class="btn btn-small">Corriger</button>
         </form>
 
@@ -76,8 +77,21 @@
         const missing = document.getElementById("missing");
         complete = data.missing.length === 0;
         missing.hidden = complete;
-        missing.textContent = `Il manque ${data.missing.join(", ")}. Corrigez ou recommencez la dictée.`;
+        missing.textContent = `Il manque ${data.missing.join(", ")}. ` +
+            "Complétez à la voix ou dans le champ ci-dessous, ou recommencez la dictée.";
         generate.disabled = !complete;
+        document.querySelector("#correction-form input").placeholder = correctionExample(prescription);
+    }
+
+    // An example of correction that fits what the doctor most likely has to fix.
+    function correctionExample(prescription) {
+        if (!prescription.patient) return "Exemple : le patient s'appelle Pierre Durand";
+        if (!prescription.medications.length) return "Exemple : Doliprane 1 g matin et soir pendant 5 jours";
+        const incomplete = prescription.medications.find((m) => !m.name || !m.dosage || !m.duration);
+        const name = (incomplete || prescription.medications[0]).name || "le médicament";
+        if (incomplete && !incomplete.dosage) return `Exemple : ${name}, un comprimé matin et soir`;
+        if (incomplete && !incomplete.duration) return `Exemple : ${name} pendant 7 jours`;
+        return `Exemple : ${name}, plutôt pendant 10 jours`;
     }
 
     async function send(url, payload) {

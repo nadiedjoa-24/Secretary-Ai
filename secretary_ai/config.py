@@ -10,6 +10,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 PLANNING_DIR = PROJECT_ROOT / "planning_json"
 AUDIO_DIR = PROJECT_ROOT / "audio_recordings"
 PRESCRIPTIONS_DIR = PROJECT_ROOT / "prescriptions"
+AI_PROVIDER = os.getenv("AI_PROVIDER", "openai")
 TTS_ENGINE = os.getenv("TTS_ENGINE", "openai")
 GOOGLE_TTS_KEY_FILE = PROJECT_ROOT / os.getenv("GOOGLE_TTS_KEY_FILE", "google_cloud_tts_key.json")
 # Microphone index as listed by PyAudio; unset means the system default microphone.

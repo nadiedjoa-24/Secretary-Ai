@@ -11,7 +11,6 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
 COPY secretary_ai secretary_ai
 COPY web web
-COPY planning_json planning_json
 
 RUN useradd --create-home app && chown -R app /app
 USER app

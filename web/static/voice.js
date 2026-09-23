@@ -40,9 +40,37 @@ async function postToApi(url, { audio, text } = {}) {
     return data;
 }
 
-function playAudio(dataUrl) {
-    if (dataUrl) new Audio(dataUrl).play().catch(() => {});
+function frenchVoice() {
+    const voices = speechSynthesis.getVoices().filter((voice) => voice.lang.startsWith("fr"));
+    return voices.find((voice) => /natural|google/i.test(voice.name)) || voices[0];
 }
+
+let playing = null;
+
+// Stops the assistant's voice, for instance when the user starts answering.
+function stopSpeaking() {
+    if (playing) playing.pause();
+    playing = null;
+    if ("speechSynthesis" in window) speechSynthesis.cancel();
+}
+
+// Plays the audio synthesized by the server, or reads `text` with the browser's own French voice.
+function speak(text, audioUrl) {
+    stopSpeaking();
+    if (audioUrl) {
+        playing = new Audio(audioUrl);
+        playing.play().catch(() => {});
+        return;
+    }
+    if (!("speechSynthesis" in window)) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "fr-FR";
+    utterance.voice = frenchVoice() || null;
+    speechSynthesis.speak(utterance);
+}
+
+// Browsers load their voice list asynchronously.
+if ("speechSynthesis" in window) speechSynthesis.getVoices();
 
 // Turns `button` into a start/stop toggle and passes the finished recording to `onRecording`.
 function bindRecordButton(button, labels, onRecording, onError) {
@@ -56,6 +84,7 @@ function bindRecordButton(button, labels, onRecording, onError) {
             onRecording(await recorder.stop());
             return;
         }
+        stopSpeaking();  // so that the recording only picks up the user
         starting = true;
         try {
             await recorder.start();
@@ -77,6 +106,7 @@ function bindTextForm(form, onText) {
         const input = form.elements.text;
         const text = input.value.trim();
         if (!text) return;
+        stopSpeaking();
         input.value = "";
         onText(text);
     });

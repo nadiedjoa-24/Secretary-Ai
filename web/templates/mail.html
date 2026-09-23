@@ -24,19 +24,20 @@
     {% for msg in messages or [] %}
     <div class="flash flash-success">{{ msg }}</div>
     {% endfor %}
+    {% if error %}<div class="flash flash-danger">{{ error }}</div>{% endif %}
 
     {% if mode == "summarize" %}
     {% for mail in mails %}
     <div class="mail-card">
         <b>Expéditeur :</b> {{ mail.sender }}<br>
-        <b>Date :</b> {{ mail.date }}<br>
+        <b>Date :</b> {{ mail.date|mail_date }}<br>
         <b>Objet :</b> {{ mail.subject }}<br>
         <b>Résumé :</b> {{ mail.summary }}
         <form method="post">
             <input type="hidden" name="email_id" value="{{ mail.id }}">
             <label for="folder-{{ mail.id }}">Déplacer vers :</label>
             <select id="folder-{{ mail.id }}" name="target_folder">
-                {% for folder in folders %}
+                {% for folder in folders if folder != "INBOX" %}
                 <option value="{{ folder }}">{{ folder }}</option>
                 {% endfor %}
             </select>

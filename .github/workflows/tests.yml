@@ -34,8 +34,8 @@ jobs:
 
       - name: Start the demo and check that every page responds
         run: |
-          docker run -d --name demo -p 8000:8000 -e OPENAI_API_KEY=placeholder secretary-ai
+          docker run -d --name demo -p 8000:8000 -e AI_PROVIDER=groq -e GROQ_API_KEY=placeholder -e TTS_ENGINE=browser secretary-ai
           for i in $(seq 1 30); do curl -sf http://localhost:8000/ > /dev/null && break; sleep 1; done
-          for path in / /prescription /mail "/planner/appointments?month=1" /planner/reschedule/0; do
+          for path in / /prescription /mail /planner/ /planner/appointments /planner/available /planner/reschedule/0; do
             curl -sf "http://localhost:8000$path" > /dev/null || { docker logs demo; exit 1; }
           done

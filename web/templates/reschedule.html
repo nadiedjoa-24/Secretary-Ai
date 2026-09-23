@@ -5,11 +5,15 @@
 {% block content %}
 <div class="card card-wide">
     <h1>Reprogrammer un rendez-vous</h1>
-    {% set when = day_label(appointment.date.month, appointment.date.day)|lower ~ " " ~ appointment.date.month|month_name %}
+    {% set when = (appointment.date|day_label)|lower ~ " " ~ appointment.date|month_label %}
     <p class="subtitle">
         {{ appointment.name }} {{ appointment.surname }}, {{ when }} à {{ appointment.start_time.strftime('%H:%M') }}
+        {%- if appointment.doctor %} avec {{ appointment.doctor }}{% endif %}
         {%- if appointment.description %} ({{ appointment.description }}){% endif %}
     </p>
+    {% if not upcoming %}
+    <div class="flash flash-info">{{ past_message }}</div>
+    {% else %}
     <p class="muted">Vous jouez le patient : répondez à l'assistante à la voix ou au clavier.</p>
 
     <div id="chat" class="chat" aria-live="polite"></div>
@@ -28,14 +32,16 @@
     <div id="done" class="flash flash-success" hidden>
         <span id="done-text"></span> <a id="done-link">Voir l'agenda</a>
     </div>
+    {% endif %}
 
-    <a class="btn btn-secondary" href="{{ url_for('show_appointments', month=appointment.date.month) }}">
+    <a class="btn btn-secondary" href="{{ url_for('show_appointments', month=appointment.date.strftime('%Y-%m')) }}">
         Retour aux rendez-vous
     </a>
 </div>
 {% endblock %}
 
 {% block scripts %}
+{% if upcoming %}
 <script src="{{ url_for('static', filename='voice.js') }}"></script>
 <script>
     const chat = document.getElementById("chat");
@@ -52,14 +58,14 @@
         const bubble = document.createElement("div");
         bubble.className = `bubble bubble-${role}`;
         bubble.textContent = text;
-        if (audio) {
+        if (role === "agent") {
             const replay = document.createElement("button");
             replay.type = "button";
             replay.className = "replay";
             replay.textContent = "Écouter";
-            replay.addEventListener("click", () => playAudio(audio));
+            replay.addEventListener("click", () => speak(text, audio));
             bubble.append(" ", replay);
-            playAudio(audio);
+            speak(text, audio);
         }
         chat.append(bubble);
     }
@@ -92,7 +98,7 @@
 
     async function start() {
         setBusy("L'assistante prépare la conversation…");
-        const data = await call("{{ url_for('reschedule_start', appt_id=appt_id) }}");
+        const data = await call("{{ url_for('reschedule_start', appt_id=appointment.id) }}");
         if (!data) return;
         conversationId = data.conversation_id;
         addBubble("agent", data.reply, data.audio);
@@ -104,4 +110,5 @@
     bindTextForm(document.getElementById("message-form"), (text) => sendMessage({ text }));
     start();
 </script>
+{% endif %}
 {% endblock %}

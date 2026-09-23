@@ -5,13 +5,15 @@ services:
     plan: free
     healthCheckPath: /
     envVars:
-      - key: OPENAI_API_KEY
+      - key: GROQ_API_KEY
         sync: false
+      - key: AI_PROVIDER
+        value: groq
+      - key: TTS_ENGINE
+        value: browser
       - key: FLASK_SECRET_KEY
         generateValue: true
       - key: DEMO_MODE
         value: "1"
       - key: AI_REQUESTS_PER_HOUR
         value: "30"
-      - key: TTS_ENGINE
-        value: openai

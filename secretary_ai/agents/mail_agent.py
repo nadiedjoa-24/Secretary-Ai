@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from secretary_ai.agents.mail_handler import MailHandler, OutgoingEmail, ReceivedEmail
 from secretary_ai.ai.api_client import APIClient
@@ -34,18 +34,18 @@ class MailAgent:
         )
         return answer.strip("\"'` ")
 
-    def classify_mailbox(self) -> List[str]:
-        """Move every unread email to the folder chosen by the model. Returns the destination folders."""
+    def classify_mailbox(self) -> List[Tuple[ReceivedEmail, str]]:
+        """Move every unread email to the folder chosen by the model. Returns each moved email with its folder."""
         folders = self.handler.get_folders()
-        destinations = []
+        moved = []
         for email in self.handler.get_unread_emails():
             folder = self.classify_email(email, folders)
             if folder not in folders:
                 logger.warning("Model suggested unknown folder %r for email %s, leaving it in the inbox.", folder, email.id)
                 continue
             self.handler.move_email(email.id, folder)
-            destinations.append(folder)
-        return destinations
+            moved.append((email, folder))
+        return moved
 
     def respond_to_email(self, email: ReceivedEmail) -> str:
         reply = self._ask(

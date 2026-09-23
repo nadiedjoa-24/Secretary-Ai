@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 
 from secretary_ai.agents import prescription_agent
@@ -5,6 +7,7 @@ from secretary_ai.agents.prescription_agent import (
     Medication,
     Prescription,
     PrescriptionAgent,
+    download_name,
     safe_filename,
 )
 
@@ -63,7 +66,8 @@ def test_generate_pdf_writes_inside_the_prescriptions_folder(tmp_path, monkeypat
     first, second = agent.generate_pdf(prescription), agent.generate_pdf(prescription)
 
     assert first.parent == tmp_path
-    assert first.name.startswith("ordonnance_Pierre_Durand_")
+    assert first.name.startswith(f"ordonnance_Pierre_Durand_{date.today().isoformat()}_")
+    assert download_name(first.name) == f"ordonnance_Pierre_Durand_{date.today().isoformat()}.pdf"
     assert first != second
     assert first.read_bytes().startswith(b"%PDF")
 

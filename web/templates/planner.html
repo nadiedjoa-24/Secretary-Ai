@@ -2,16 +2,30 @@
 
 {% block title %}Agenda - Secretary AI{% endblock %}
 
-{% macro month_form(action, select_id, button_label) %}
-<form action="{{ action }}" method="get" class="form-row">
+{% macro month_select(select_id, choices, labels=None) %}
+<span class="field">
     <label for="{{ select_id }}">Mois :</label>
     <select id="{{ select_id }}" name="month">
-        {% for i in range(1, 13) %}
-        <option value="{{ i }}" {% if i == current_month %}selected{% endif %}>{{ i|month_name|capitalize }} {{ year }}</option>
+        {% for month in choices %}
+        {% set value = month.strftime('%Y-%m') %}
+        <option value="{{ value }}" {% if month == selected %}selected{% endif %}>
+            {{- labels[value] if labels else month|month_label|capitalize -}}
+        </option>
         {% endfor %}
     </select>
-    <button type="submit" class="btn btn-small">{{ button_label }}</button>
-</form>
+</span>
+{% endmacro %}
+
+{% macro doctor_select(select_id, allow_all) %}
+<span class="field">
+    <label for="{{ select_id }}">Praticien :</label>
+    <select id="{{ select_id }}" name="doctor">
+        {% if allow_all %}<option value="">Tous les praticiens</option>{% endif %}
+        {% for name, specialty in doctors.items() %}
+        <option value="{{ name }}">{{ name }}, {{ specialty }}</option>
+        {% endfor %}
+    </select>
+</span>
 {% endmacro %}
 
 {% block content %}
@@ -19,11 +33,34 @@
     <h1>Agenda</h1>
 
     <div class="section-title">Rendez-vous enregistrés</div>
-    {{ month_form(url_for('show_appointments'), 'month-appointments', 'Voir les rendez-vous') }}
+    <p class="muted">Pour reprogrammer un rendez-vous à venir, affichez les rendez-vous d'un mois puis cliquez sur
+        « Reprogrammer » : l'assistante mène la conversation avec le patient, que vous jouez.</p>
+    <form action="{{ url_for('show_appointments') }}" method="get" class="form-row">
+        {{ month_select('month-appointments', months, labels[""]) }}
+        {{ doctor_select('doctor-appointments', true) }}
+        <button type="submit" class="btn btn-small">Voir les rendez-vous</button>
+    </form>
 
     <hr>
 
     <div class="section-title">Créneaux disponibles</div>
-    {{ month_form(url_for('show_available'), 'month-available', 'Voir les créneaux libres') }}
+    <form action="{{ url_for('show_available') }}" method="get" class="form-row">
+        {{ month_select('month-available', future_months) }}
+        {{ doctor_select('doctor-available', false) }}
+        <button type="submit" class="btn btn-small">Voir les créneaux libres</button>
+    </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // The number of appointments shown for each month follows the selected doctor.
+    const labels = {{ labels|tojson }};
+    const doctorSelect = document.getElementById("doctor-appointments");
+    doctorSelect.addEventListener("change", () => {
+        for (const option of document.getElementById("month-appointments").options) {
+            option.textContent = labels[doctorSelect.value][option.value];
+        }
+    });
+</script>
 {% endblock %}
