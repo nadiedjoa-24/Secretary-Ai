@@ -7,10 +7,12 @@ Voice and language model assistants that take over repetitive tasks of a medical
 
 First-year engineering project at [Télécom Paris](https://www.telecom-paris.fr/), 2025. The user interface and the voice assistant speak French, since the project targets French medical practices; the code and documentation are in English.
 
+**[Try the live demo](https://secretary-ai-7jhj.onrender.com)**: fictional patients and mailbox, voice or typed input. The free hosting sleeps when unused, so the first visit can take about a minute.
+
 <p align="center">
-  <img src="docs/screenshots/home.png" width="32%" alt="Home page">
-  <img src="docs/screenshots/appointments.png" width="32%" alt="Appointments of the month">
-  <img src="docs/screenshots/available.png" width="32%" alt="Free time slots">
+  <img src="docs/screenshots/prescription.png" width="32%" alt="Prescription extracted from a dictation">
+  <img src="docs/screenshots/reschedule.png" width="32%" alt="Rescheduling conversation with the assistant">
+  <img src="docs/screenshots/mail.png" width="32%" alt="Email summaries">
 </p>
 
 ## Features
