@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des mails - Secretary AI{% endblock %}
+
+{% block content %}
+<div class="card card-wide">
+    <h1>Gestion des mails</h1>
+
+    <div class="button-row">
+        <form action="{{ url_for('mail') }}" method="get" onsubmit="showLoader()">
+            <input type="hidden" name="action" value="summarize">
+            <button type="submit" class="btn">Résumer les mails</button>
+        </form>
+        <form action="{{ url_for('mail') }}" method="post" onsubmit="showLoader()">
+            <button type="submit" class="btn" name="auto_sort" value="1">Tri automatique</button>
+        </form>
+    </div>
+
+    <div id="loader" class="loader"></div>
+
+    {% for msg in messages or [] %}
+    <div class="flash flash-success">{{ msg }}</div>
+    {% endfor %}
+
+    {% if mode == "summarize" %}
+    {% for mail in mails %}
+    <div class="mail-card">
+        <b>Expéditeur :</b> {{ mail.sender }}<br>
+        <b>Date :</b> {{ mail.date }}<br>
+        <b>Résumé :</b> {{ mail.summary }}
+        <form method="post">
+            <input type="hidden" name="email_id" value="{{ mail.id }}">
+            <label for="folder-{{ mail.id }}">Déplacer vers :</label>
+            <select id="folder-{{ mail.id }}" name="target_folder">
+                {% for folder in folders %}
+                <option value="{{ folder }}">{{ folder }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-small">Déplacer</button>
+        </form>
+    </div>
+    {% else %}
+    <p>Aucun mail non lu.</p>
+    {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showLoader() {
+        document.getElementById("loader").style.display = "block";
+    }
+</script>
+{% endblock %}

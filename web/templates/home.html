@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil - Secretary AI{% endblock %}
+
+{% block back_link %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Secretary AI</h1>
+    <p class="subtitle">Assistant IA pour le secrétariat médical</p>
+    <a class="btn btn-block" href="{{ url_for('prescription') }}">Générer une ordonnance</a>
+    <a class="btn btn-block" href="{{ url_for('mail') }}">Gérer les mails</a>
+    <a class="btn btn-block" href="{{ url_for('planner_index') }}">Accéder à l'agenda</a>
+    <div class="credits">
+        <div><strong>Réalisé par :</strong> Agshay Nadanakumar, Théophile Nadiedjoa, Antoine Ollivier,
+            Yanic Röthlingshöfer, Yifan Wang</div>
+        <div><strong>Encadré par :</strong> Thomas Pujol, Jean-Sébastien Gomez</div>
+    </div>
+</div>
+{% endblock %}

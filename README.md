@@ -1,109 +1,92 @@
-# ARTISHOW - SECRETARYAI
+# Secretary AI
 
-Le projet **secretaryAI** a pour objectif de développer des outils basés sur l’intelligence artificielle afin d’optimiser les tâches répétitives d’une secrétaire médicale.
+Voice and language model assistants that take over repetitive tasks of a medical secretary: writing prescriptions from a doctor's dictation, triaging the office inbox and rescheduling appointments over a spoken conversation.
 
-Chaque tâche sera prise en charge par un agent d’intelligence artificielle, composé de deux parties : 
-- un contrôleur technique chargé de manipuler les données, 
-- et une partie intelligente s’appuyant soit sur une API externe (OpenAI, Mistral, etc.), soit sur une solution locale (modèles HuggingFace via `transformers`, accompagnés d’une interface réseau).
+First-year engineering project at [Télécom Paris](https://www.telecom-paris.fr/), 2025. The user interface and the voice assistant speak French, since the project targets French medical practices; the code and documentation are in English.
 
-## Client intelligent
+<p align="center">
+  <img src="docs/screenshots/home.png" width="32%" alt="Home page">
+  <img src="docs/screenshots/appointments.png" width="32%" alt="Appointments of the month">
+  <img src="docs/screenshots/available.png" width="32%" alt="Free time slots">
+</p>
 
-Pour garantir une bonne interopérabilité, chaque client (API ou local) devra implémenter une interface commune définie dans `BaseAIModel`. Les fonctionnalités à implémenter sont les suivantes :
+## Features
 
-- **Basic** : requête simple pour un traitement rapide avec une bonne fiabilité.
-- **Reflexion** : requête plus complexe offrant une meilleure compréhension du problème, mais avec un temps de traitement plus long.
-- **Parsing** : extraction de données à partir d’une conversation, selon un modèle de données prédéfini.
-- **STT (Speech-to-Text)** : conversion d’un fichier audio (.wav, .mp3) en texte.
-- **TTS (Text-to-Speech)** : génération d’un fichier audio fluide et naturel à partir d’un prompt textuel.
+**Voice prescriptions.** The doctor dictates a prescription and says "c'est tout" when done. The recording is transcribed, the patient name and each medication (name, dosage, duration) are extracted as structured data, and the doctor confirms out loud or dictates a correction ("il y a deux L à Ollivier"). The prescription is then generated as a PDF.
 
- ```python
-class Message(BaseModel):
-    role: Literal["user", "assistant", "system"]
-    content: str
+**Mail assistant.** Reads the unread emails of a Gmail inbox over IMAP without marking them as read, summarizes each one in French, and sorts them into the existing Gmail labels chosen by the model. Emails can also be moved by hand from the web page.
 
-class BaseAIModel(ABC):
-    
-    @abstractmethod
-    def basic(self, messages: List[Message]) -> Message:
-        pass
+**Appointment planner.** Stores the calendar in a JSON file, with 30-minute slots on weekdays from 8:00 to 12:00 and 14:00 to 18:00, and rejects overlapping bookings. The rescheduling agent talks with the patient through the microphone, only offers free slots, extracts the new date once the patient has explicitly confirmed it, and updates the calendar.
 
-    @abstractmethod
-    def reflexion(self, messages: List[Message]) -> Message:
-        pass
+## How it works
 
-    @abstractmethod
-    def parse(self, messages: List[Message], data_model: BaseModel) -> BaseModel:
-        pass
+Every agent talks to the models through a common interface, `BaseAIModel` (`basic`, `reflexion`, `parse`, `tts`, `stt`), so the backend can be swapped without touching the agents:
 
-    @abstractmethod
-    def tts(self, text: str, output_path: str) -> str:
-        pass
-    
-    @abstractmethod
-    def stt(self, audio_path: str) -> Message:
-        pass
+- `APIClient` uses the OpenAI API for chat, transcription (`gpt-4o-mini-transcribe`) and structured outputs, and Google Cloud Text-to-Speech for a French voice.
+- `LocalClient` is an experimental implementation running Hugging Face models locally (Whisper, MMS-TTS). It keeps patient data on the machine but is not wired into the agents yet.
 
+```
+common/
+  config.py                  paths and environment variables
+  ai/
+    model/base_model.py      BaseAIModel interface and Message
+    api_client.py            OpenAI + Google Cloud TTS backend
+    local_client.py          experimental Hugging Face backend
+    audio_controller/        microphone recording and playback
+main/agents/
+  prescription_agent/        dictation, extraction, confirmation, PDF
+  email_agent/               IMAP/SMTP handler and mail agent
+  planner_agent/             JSON calendar and rescheduling agent
+web/                         Flask app, templates and stylesheet
+planning_json/2025.json      demo calendar with fictional patients
+tests/                       pytest suite, no API key needed
+```
 
- ```
+The report on the societal and environmental impact of the project (data privacy, algorithmic bias, energy use) is available in [docs/secretaryai.pdf](docs/secretaryai.pdf), in French.
 
-### 1. API
+## Getting started
 
-La classe `API_Client` implémente l’interface `BaseAIModel` en s’appuyant sur une API existante. Pour notre projet, nous avons choisi l’API d’OpenAI.
+Requirements: Python 3.10 or later, a microphone and speakers for the voice features, an OpenAI API key, and for the mail assistant a Gmail account with an [app password](https://myaccount.google.com/apppasswords). French speech synthesis uses Google Cloud Text-to-Speech, which needs a service account key.
 
-- **Avantages** : Solution complète, très bien documentée et particulièrement performante.  
-- **Inconvénients** : La sécurité des données n’est pas totalement garantie une fois celles-ci envoyées sur les serveurs de l’API. De plus, les requêtes sont payantes, ce qui peut engendrer un coût.
+```bash
+git clone https://github.com/nadiedjoa-24/Secretary-Ai.git
+cd Secretary-Ai
+python -m venv .venv
+source .venv/bin/activate        # on Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env             # then fill in your keys
+python -m web.app
+```
 
-Nous avons estimé le coût moyen d’utilisation dans un scénario réaliste. Dans notre cas, 100 requêtes représentent environ 1 centime d’euro. En supposant qu’un cabinet médical effectue environ 200 actions par jour, cela reviendrait à environ 50 centimes par mois — un coût négligeable.  
-Par ailleurs, une solution basée sur une API nécessite généralement moins de maintenance technique.
+The app runs on http://127.0.0.1:5000. Commands must be run from the repository root. Each agent can also be tried from the terminal, for example `python -m main.agents.prescription_agent.prescription_agent`.
 
-### 2. LOCAL
+To try the experimental local backend, install `requirements-local.txt` instead.
 
-La classe `API_Local` implémente également `BaseAIModel`, mais en utilisant le package `transformers` de HuggingFace. L’inférence des modèles est exécutée localement sur des GPU via CUDA, avec une interface réseau permettant la communication entre les agents et les ressources de calcul.
+## Tests
 
-- **Avantages** : Meilleur contrôle des paramètres des modèles, ce qui permet une adaptation fine à chaque usage. La sécurité est renforcée grâce à une maîtrise complète des données.  
-- **Inconvénients** : Mise en œuvre plus complexe, nécessitant un effort de maintenance accru. De plus, l’inférence locale requiert du matériel dédié, comme des GPU.
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
 
-D’un point de vue financier, cette solution garantit la confidentialité des données des patients, mais elle engendre un coût plus élevé, estimé entre 30 et 40 euros par mois (incluant la maintenance, l’infrastructure et le matériel nécessaire).
+The tests cover the calendar logic, the rescheduling slots, the prescription model and PDF generation, and every web route, using fake agents so that no API key, microphone or mailbox is needed.
 
+## Limitations
 
+This is a prototype, not a medical product. The voice features use the microphone and speakers of the machine running the server, so the web app is meant for a local demo by a single user. There is no authentication, prescriptions do not carry the doctor's identifiers, and the calendar is a demo file for the year 2025.
 
+## Authors
 
+| Name | GitHub |
+| --- | --- |
+| Agshay Nadanakumar | [@agshayn](https://github.com/agshayn) |
+| Théophile Nadiedjoa | [@nadiedjoa-24](https://github.com/nadiedjoa-24) |
+| Antoine Ollivier | [@antoineolr](https://github.com/antoineolr) |
+| Yanic Röthlingshöfer | [@yrothlin-03](https://github.com/yrothlin-03) |
+| Yifan Wang | [@NafiyTP](https://github.com/NafiyTP) |
 
-## Reprogrammation de rendez-vous
+Supervised by Thomas Pujol ([@thomaspujol69](https://github.com/thomaspujol69)) and Jean-Sébastien Gomez.
 
-La gestion de la reprogrammation des rendez-vous repose sur deux composants principaux :
+## License
 
-- **`PlannerController`** : Ce module permet de créer et gérer un planning structuré au format JSON. Il inclut plusieurs fonctionnalités :
-  - ajout et suppression de rendez-vous selon un format temporel prédéfini,
-  - récupération des rendez-vous pour une période donnée à partir d’une date de référence,
-  - détection automatique des créneaux horaires disponibles,
-  - persistance des données dans un fichier JSON local, assurant la sauvegarde et la traçabilité des actions.
-
-- **`planning_agent`** : Il s’agit d’un agent conversationnel intelligent, reposant sur une API externe. Il interagit directement avec le `PlannerController` pour proposer une interface naturelle permettant de reprogrammer un rendez-vous. La méthode principale `reschedule` permet à un utilisateur (secrétaire ou patient) de reformuler une demande de rendez-vous, qui sera analysée, interprétée, puis exécutée de manière autonome.
-
-## Gestion automatique et simplifiée d'une boîte mail
-
-Pour faciliter la gestion quotidienne d’une boîte mail professionnelle, deux modules interagissent ensemble :
-
-- **`mail_handler`** : Ce module exploite les protocoles **IMAP** (réception) et **SMTP** (envoi) grâce aux bibliothèques Python `imaplib` et `smtplib`. Il est connecté à une boîte Gmail dédiée au projet et permet de :
-  - lire les e-mails entrants non lus,
-  - extraire les pièces jointes,
-  - envoyer automatiquement des réponses ou des notifications.
-
-- **`Mail_agent`** : Cet agent IA permet :
-  - de générer un résumé automatique de tous les e-mails non lus,
-  - de trier les courriels selon leur contenu, expéditeur ou urgence,
-  - de proposer des réponses types ou des actions à entreprendre en fonction du contexte.
-
-## Génération d’ordonnance automatique
-
-Un dernier agent vise à assister les médecins dans la création rapide et fiable d’ordonnances médicales :
-
-- **`ordo_agent`** : Ce composant permet de :
-  - générer un document PDF à partir d’un modèle personnalisable aux couleurs et coordonnées du cabinet,
-  - enregistrer les informations du médecin (nom, spécialité, numéro RPPS, etc.),
-  - parser une requête vocale ou textuelle contenant les médicaments prescrits ainsi que les données du patient (nom, prénom, posologie, durée...),
-  - produire une ordonnance finalisée, prête à être imprimée ou envoyée.
-
-Cet outil vise à améliorer la fluidité de la consultation, tout en assurant la rigueur et la lisibilité des prescriptions.
-
+[MIT](LICENSE)

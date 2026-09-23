@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Agenda - Secretary AI{% endblock %}
+
+{% macro month_form(action, select_id, button_label) %}
+<form action="{{ action }}" method="get" class="form-row">
+    <label for="{{ select_id }}">Mois :</label>
+    <select id="{{ select_id }}" name="month">
+        {% for i in range(1, 13) %}
+        <option value="{{ i }}" {% if i == current_month %}selected{% endif %}>{{ i|month_name|capitalize }} {{ year }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-small">{{ button_label }}</button>
+</form>
+{% endmacro %}
+
+{% block content %}
+<div class="card">
+    <h1>Agenda</h1>
+
+    <div class="section-title">Rendez-vous enregistrés</div>
+    {{ month_form(url_for('show_appointments'), 'month-appointments', 'Voir les rendez-vous') }}
+
+    <hr>
+
+    <div class="section-title">Créneaux disponibles</div>
+    {{ month_form(url_for('show_available'), 'month-available', 'Voir les créneaux libres') }}
+</div>
+{% endblock %}

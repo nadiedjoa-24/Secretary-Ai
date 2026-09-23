@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Rendez-vous en {{ month|month_name }} {{ year }} - Secretary AI{% endblock %}
+
+{% block content %}
+<div class="card card-wide">
+    <h1>Rendez-vous en {{ month|month_name }} {{ year }}</h1>
+
+    {% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+    <div class="flash flash-success">{{ message }}</div>
+    {% endfor %}
+    {% endwith %}
+
+    {% for day, appts in appointments_by_day.items()|sort %}
+    <div class="day">
+        <div class="day-title">{{ day_label(month, day) }}</div>
+        <ul>
+            {% for appt in appts %}
+            <li>
+                <div>
+                    <strong>{{ appt.start_time[:5] }}</strong> {{ appt.name }} {{ appt.surname }}<br>
+                    <span class="muted">{{ appt.description }}</span>
+                </div>
+                <a class="btn btn-small" href="{{ url_for('reschedule', appt_id=appt.id) }}">Reprogrammer</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <div class="flash flash-info">Aucun rendez-vous pour ce mois.</div>
+    {% endfor %}
+
+    <a class="btn btn-secondary" href="{{ url_for('planner_index') }}">Retour à l'agenda</a>
+</div>
+{% endblock %}

@@ -1,15 +1,10 @@
 __pycache__/
 *.pyc
-*.mp3
-.env
+.pytest_cache/
 .DS_Store
-.pytest_cache
+
+.env
 google_cloud_tts_key.json
 
-# Notes internes d'equipe / brouillons de travail, pas destines a etre publics
-LLAMA.md
-SUIVI.md
-networking/
-ordonnances/
-docs/*
-!docs/secretaryai.pdf
+audio_recordings/
+prescriptions/

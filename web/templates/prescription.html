@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Générer une ordonnance - Secretary AI{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Générer une ordonnance vocale</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    {% if category == "file" %}
+    <div class="flash flash-success">
+        <a href="{{ url_for('download_prescription', filename=message) }}" download>
+            Télécharger l'ordonnance générée ({{ message }})
+        </a>
+    </div>
+    {% else %}
+    <div class="flash flash-{{ category }}">{{ message }}</div>
+    {% endif %}
+    {% endfor %}
+    {% endwith %}
+
+    <div id="voice-loader" class="voice-loader">
+        <div class="pulse-dot"></div>
+        Enregistrement en cours
+    </div>
+
+    <form method="post" class="button-row">
+        <button type="submit" id="start-btn" class="btn">Démarrer la dictée</button>
+        <button type="button" id="stop-btn" class="btn btn-danger">Arrêter l'enregistrement</button>
+    </form>
+
+    {% if infos %}
+    <div class="flash flash-info text-left">
+        <b>Patient :</b> {{ infos.patient }}<br>
+        <b>Médicaments :</b>
+        <ul>
+            {% for med in infos.medications %}
+            <li><b>{{ med.name }}</b> : {{ med.dosage }}, pendant {{ med.duration }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if retry %}
+    <div class="flash {{ 'flash-info' if retry == 'after_success' else 'flash-danger' }}">
+        Voulez-vous dicter une nouvelle ordonnance ?
+    </div>
+    <form method="post" class="button-row">
+        <button name="retry" value="oui" type="submit" class="btn">Oui, recommencer</button>
+        <button name="retry" value="non" type="submit" class="btn btn-danger">Non, arrêter</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const loader = document.getElementById("voice-loader");
+
+    document.getElementById("start-btn").addEventListener("click", () => {
+        loader.style.display = "flex";
+    });
+
+    document.getElementById("stop-btn").addEventListener("click", () => {
+        fetch("{{ url_for('stop_recording') }}", { method: "POST" });
+        loader.style.display = "none";
+    });
+</script>
+{% endblock %}

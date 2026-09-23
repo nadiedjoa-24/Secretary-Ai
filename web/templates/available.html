@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Créneaux libres en {{ month|month_name }} {{ year }} - Secretary AI{% endblock %}
+
+{% block content %}
+<div class="card card-wide">
+    <h1>Créneaux libres en {{ month|month_name }} {{ year }}</h1>
+
+    {% for day, times in (slots.get(month) or {}).items()|sort %}
+    <div class="day">
+        <div class="day-title">{{ day_label(month, day) }}</div>
+        <ul>
+            <li>{{ times|join(', ') }}</li>
+        </ul>
+    </div>
+    {% else %}
+    <div class="flash flash-info">Aucun créneau libre ce mois-ci.</div>
+    {% endfor %}
+
+    <a class="btn btn-secondary" href="{{ url_for('planner_index') }}">Retour à l'agenda</a>
+</div>
+{% endblock %}

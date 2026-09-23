@@ -15,10 +15,10 @@
         ],
         "4": [
             {
-                "name": "Jean Sebastien",
-                "surname": "Gomez",
+                "name": "Paul",
+                "surname": "Lambert",
                 "date": "2025-01-04",
-                "mail": "js.gomez@example.com",
+                "mail": "paul.lambert@example.com",
                 "phone": "555-0006",
                 "description": "Rendez-vous de suivi",
                 "start_time": "11:00:00"
@@ -77,10 +77,10 @@
         ],
         "8": [
             {
-                "name": "Thomas",
-                "surname": "Pujol",
+                "name": "Sophie",
+                "surname": "Girard",
                 "date": "2025-01-08",
-                "mail": "thomas.pujol@example.com",
+                "mail": "sophie.girard@example.com",
                 "phone": "555-0012",
                 "description": "Suivi cardio",
                 "start_time": "15:00:00"

@@ -1,270 +1,180 @@
-import os
 import imaplib
-from email import policy
-from email.parser import BytesParser
-from email.header import decode_header
+import logging
 import smtplib
 from datetime import datetime, timedelta
-from email.utils import parsedate_to_datetime
+from email import policy
+from email.header import decode_header
+from email.message import EmailMessage
 from email.mime.text import MIMEText
+from email.parser import BytesParser
+from email.utils import parsedate_to_datetime
+from typing import List, Optional
+
 from pydantic import BaseModel
-from typing import Optional, List, Literal
-from dotenv import load_dotenv
 
-load_dotenv()
+from common.config import require_env
 
-class eMail(BaseModel):
-    """
-    Class representing an email.
-    """
+logger = logging.getLogger(__name__)
+
+
+class ReceivedEmail(BaseModel):
     id: str
     content: str
     subject: str
     sender: str
     date: str
 
-    def __str__(self):
-        return f"Email ID: {self.id},\n Subject: {self.subject},\n Sender: {self.sender},\n Date: {self.date}"
-    
-class EMail(BaseModel):
+
+class OutgoingEmail(BaseModel):
     recipient: str
     content: str
     subject: Optional[str] = None
 
-    def __str__(self):
-        return f"Recipient: {self.recipient},\n Subject: {self.subject},\n Content: {self.content}." 
 
-    
+def _decode_subject(message: EmailMessage) -> str:
+    parts = decode_header(message["Subject"] or "")
+    if not parts:
+        return ""
+    subject, encoding = parts[0]
+    if isinstance(subject, bytes):
+        subject = subject.decode(encoding or "utf-8", errors="ignore")
+    return subject
 
-class MailBox(BaseModel):
-    """
-    Class representing available folders for mail processing.
-    """
-    folder: Literal["RDV", "[Gmail]/IMPORTANT", "SPAM", "JSP"]
+
+def _plain_text_body(message: EmailMessage) -> str:
+    if not message.is_multipart():
+        payload = message.get_payload(decode=True)
+        return payload.decode(message.get_content_charset() or "utf-8", errors="ignore") if payload else ""
+    body = ""
+    for part in message.walk():
+        if part.get_content_type() == "text/plain" and not part.get_content_disposition():
+            payload = part.get_payload(decode=True)
+            if payload:
+                body += payload.decode(part.get_content_charset() or "utf-8", errors="ignore")
+    return body
 
 
-class MAIL_HANDLER:
+class MailHandler:
+    """Reads, moves and sends Gmail messages over IMAP and SMTP."""
 
     IMAP_SERVER = "imap.gmail.com"
     IMAP_PORT = 993
+    SMTP_SERVER = "smtp.gmail.com"
 
-    def __init__(self,
-                EMAIL: str = None,
-                PASSWORD: str = None,
-                ):
-        self.EMAIL = EMAIL or os.getenv("EMAIL")
-        self.PASSWORD = PASSWORD or os.getenv("PASSWORD")
-        if not self.EMAIL:
-            raise ValueError("EMAIL doit être défini dans le .env ou passé en argument.")
-        if not self.PASSWORD:
-            raise ValueError("PASSWORD doit être défini dans le .env ou passé en argument.")
+    def __init__(self, address: Optional[str] = None, app_password: Optional[str] = None):
+        self.address = address or require_env("GMAIL_ADDRESS")
+        self.app_password = app_password or require_env("GMAIL_APP_PASSWORD")
+        self.mailbox: Optional[imaplib.IMAP4_SSL] = None
+        self._connect()
 
-        self.mailbox = None
-
-        try:
-            self._connect()
-            print("Connexion established with server.")
-        except ValueError as e:
-            print(f"Connexion error : {e}")
-            raise
-
-        self.mails: List[eMail] = []
-
-    def _connect(self):
-        """
-        Connect client to the IMAP server associated with the EMAIL and PASSWORD.
-        """
+    def _connect(self) -> None:
         try:
             self.mailbox = imaplib.IMAP4_SSL(host=self.IMAP_SERVER, port=self.IMAP_PORT)
-            self.mailbox.login(self.EMAIL, self.PASSWORD)
-        except imaplib.IMAP4.error as e:
-            raise ValueError(f"Erreur de connexion à la boîte mail : {e}")
+            self.mailbox.login(self.address, self.app_password)
+        except imaplib.IMAP4.error as error:
+            raise ConnectionError(f"Could not log in to the mailbox: {error}") from error
 
-    def _disconnect(self):
-        try :
+    def disconnect(self) -> None:
+        try:
             self.mailbox.logout()
-            print("Déconnexion réussie de la boîte mail.")
-        except imaplib.IMAP4.error as e:
-            print(f"Erreur de déconnexion de la boîte mail : {e}")
+        except imaplib.IMAP4.error as error:
+            logger.warning("Logout failed: %s", error)
 
+    def _fetch_message(self, uid: bytes) -> Optional[EmailMessage]:
+        # BODY.PEEK does not mark the email as read, unlike RFC822.
+        status, fetched = self.mailbox.uid("FETCH", uid, "(BODY.PEEK[])")
+        if status != "OK" or not fetched or not isinstance(fetched[0], tuple):
+            return None
+        return BytesParser(policy=policy.default).parsebytes(fetched[0][1])
 
-    def get_unread_emails(self) -> List[eMail]:
-        """
-        Open inbox folder and retrieve all unread emails as eMail objects.
-        """
-        unread_emails = []
+    def get_unread_emails(self) -> List[ReceivedEmail]:
+        # Reconnect: the IMAP session may have timed out between two web requests.
         self._connect()
         self.mailbox.select("INBOX")
-        status, messages = self.mailbox.search(None, 'UNSEEN')
-        print(f"test: {messages[0]}")
+        status, data = self.mailbox.uid("SEARCH", None, "UNSEEN")
         if status != "OK":
-            print("Erreur lors de la récupération des emails.")
-            return
+            logger.error("Could not search the inbox for unread emails.")
+            return []
 
-        email_ids = messages[0].split()
-        for e_id in email_ids:
-            status, data = self.mailbox.fetch(e_id, "(RFC822)")
-            if status == "OK":
-                raw_email = data[0][1]
-                msg = BytesParser(policy=policy.default).parsebytes(raw_email)
+        emails = []
+        for uid in data[0].split():
+            message = self._fetch_message(uid)
+            if message is None:
+                continue
+            emails.append(ReceivedEmail(
+                id=uid.decode(),
+                content=_plain_text_body(message),
+                subject=_decode_subject(message),
+                sender=message.get("From", ""),
+                date=message.get("Date", ""),
+            ))
+        return emails
 
-                dh = decode_header(msg["Subject"] or "")
-                subject, encoding = dh[0] if dh else ("", None)
-                if isinstance(subject, bytes):
-                    subject = subject.decode(encoding or "utf-8", errors="ignore")
-
-                sender = msg.get("From", "")
-                date = msg.get("Date", "")
-
-                content = ""
-                if msg.is_multipart():
-                    for part in msg.walk():
-                        if part.get_content_type() == "text/plain" and not part.get_content_disposition():
-                            payload = part.get_payload(decode=True)
-                            charset = part.get_content_charset() or "utf-8"
-                            content += payload.decode(charset, errors="ignore")
-                else:
-                    payload = msg.get_payload(decode=True)
-                    charset = msg.get_content_charset() or "utf-8"
-                    content = payload.decode(charset, errors="ignore") if payload else ""
-
-                email_obj = eMail(
-                    id=e_id.decode(),
-                    content=content,
-                    subject=subject,
-                    sender=sender,
-                    date=date
-                )
-                unread_emails.append(email_obj)
-
-        self.mails = unread_emails
-        return unread_emails
-
-
-    def move_email(self, email_id, target_folder):
-        """
-        Move an email according to its ID to the target folder.
-        """
-        self.mailbox.select("INBOX")
-        if target_folder in self.get_folders():
-            self.mailbox.copy(email_id, target_folder)
-            self.mailbox.store(email_id, '+FLAGS', '\\Deleted')
-            self.mailbox.expunge()
-        else:
-            print(f"Folder {target_folder} does not exist. Please choose one of the following: {self.get_folders()}")
-
-
-    def get_folders(self):
-        """
-        Return all available folders in the mailbox.
-        """
+    def get_folders(self) -> List[str]:
         try:
             status, folders = self.mailbox.list()
-            if status != "OK":
-                print("Error retrieving mailbox's folders.")
-                return []
-            return [folder.decode().split(' "/" ')[-1].strip('"') for folder in folders]
-        except imaplib.IMAP4.error as e:
-            print(f"Error retrieving mailbox's folders: {e}")
+        except imaplib.IMAP4.error as error:
+            logger.error("Could not list mailbox folders: %s", error)
             return []
-        
-
-    def delete_old_emails(self):
-        """
-        Delete all emails older than 30 days.
-        """
-        self.mailbox.select("INBOX")
-        status, messages = self.mailbox.search(None, 'ALL')
         if status != "OK":
-            print("Error retrieving old emails")
-            return
+            return []
+        return [folder.decode().split(' "/" ')[-1].strip('"') for folder in folders]
 
-        email_ids = messages[0].split()
-        for e_id in email_ids:
-            status, data = self.mailbox.fetch(e_id, "(RFC822)")
-            if status == "OK":
-                raw_email = data[0][1]
-                msg = BytesParser(policy=policy.default).parsebytes(raw_email)
-                date_header = msg.get("Date")
-                try:
-                    email_date = parsedate_to_datetime(date_header)
-                except Exception:
-                    continue
-
-                cutoff = datetime.now(email_date.tzinfo) - timedelta(days=30)
-                if email_date < cutoff:
-                    self.mailbox.store(e_id, '+FLAGS', '\\Deleted')
-                    print(f"Deleted email {e_id.decode()} dated {email_date.isoformat()}")
-
+    def move_email(self, email_id: str, target_folder: str) -> None:
+        """Move an email, identified by its IMAP UID, from the inbox to `target_folder`."""
+        folders = self.get_folders()
+        if target_folder not in folders:
+            raise ValueError(f"Folder {target_folder!r} does not exist. Available folders: {folders}")
+        self.mailbox.select("INBOX")
+        status, _ = self.mailbox.uid("COPY", email_id, f'"{target_folder}"')
+        if status != "OK":
+            raise RuntimeError(f"Could not copy email {email_id} to {target_folder!r}.")
+        self.mailbox.uid("STORE", email_id, "+FLAGS", "(\\Deleted)")
         self.mailbox.expunge()
-    
 
-
-    def send_email(self, email_to_send: EMail):
-        """
-        Send an email to the recipient via SMTP.
-        """
-        print(email_to_send)
-        msg = MIMEText(email_to_send.content, "plain", "utf-8")
-        if email_to_send.subject:
-            msg["Subject"] = email_to_send.subject
-        msg["From"] = self.EMAIL
-        msg["To"] = email_to_send.recipient
-
-        try:
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as smtp:
-                smtp.login(self.EMAIL, self.PASSWORD)
-                smtp.send_message(msg)
-            print("Email sent via SSL port 465.")
+    def delete_old_emails(self, max_age_days: int = 30) -> None:
+        self.mailbox.select("INBOX")
+        status, data = self.mailbox.uid("SEARCH", None, "ALL")
+        if status != "OK":
+            logger.error("Could not search the inbox.")
             return
-        except Exception as e1:
-            print(f"Port 465 failed ({e1}), trying STARTTLS on port 587...")
 
-        # Second attempt: STARTTLS on port 587
+        for uid in data[0].split():
+            message = self._fetch_message(uid)
+            if message is None:
+                continue
+            try:
+                sent_at = parsedate_to_datetime(message.get("Date"))
+            except (TypeError, ValueError):
+                continue
+            if sent_at < datetime.now(sent_at.tzinfo) - timedelta(days=max_age_days):
+                self.mailbox.uid("STORE", uid, "+FLAGS", "(\\Deleted)")
+        self.mailbox.expunge()
+
+    def send_email(self, email: OutgoingEmail) -> None:
+        message = MIMEText(email.content, "plain", "utf-8")
+        if email.subject:
+            message["Subject"] = email.subject
+        message["From"] = self.address
+        message["To"] = email.recipient
+
         try:
-            with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as smtp:
-                smtp.ehlo()
-                smtp.starttls()
-                smtp.ehlo()
-                smtp.login(self.EMAIL, self.PASSWORD)
-                smtp.send_message(msg)
-            print("Email sent via STARTTLS port 587.")
-        except Exception as e2:
-            raise ValueError(f"Failed to send email on port 465 ({e1}) and port 587 ({e2})")
+            with smtplib.SMTP_SSL(self.SMTP_SERVER, 465, timeout=10) as smtp:
+                smtp.login(self.address, self.app_password)
+                smtp.send_message(message)
+            return
+        except (OSError, smtplib.SMTPException) as ssl_error:
+            logger.warning("SMTP over SSL failed (%s), retrying with STARTTLS.", ssl_error)
 
+        with smtplib.SMTP(self.SMTP_SERVER, 587, timeout=10) as smtp:
+            smtp.starttls()
+            smtp.login(self.address, self.app_password)
+            smtp.send_message(message)
 
-
-    
-
-
-     
- # Test example
 
 if __name__ == "__main__":
-
-    mail_handler = MAIL_HANDLER()
-
-    mail_handler.get_unread_emails()
-    
-    for e in mail_handler.mails:
-        print(e)
-
-    folders = mail_handler.get_folders()
-    print(f"Available folders: {folders}")
-    try:
-        mail_handler.move_email(mail_handler.mails[0].id, "RDV")
-    except IndexError:
-        print("[ERROR] : No emails to move.")
-    
-    mail_handler._disconnect()
-
-    print("== Test envoi email ==")
-    email = EMail(
-        recipient="yanic.rothlingshofer@gmail.com",
-        content="Ceci est un test d'envoi d'email depuis le MAIL_HANDLER.",
-        subject="Test Email")
-    try:
-        mail_handler.send_email(email)
-        print("Email sent successfully.")
-    except Exception as e:
-        print(f"Failed to send email: {e}")
+    handler = MailHandler()
+    for received in handler.get_unread_emails():
+        print(f"{received.date} | {received.sender} | {received.subject}")
+    print("Folders:", handler.get_folders())
+    handler.disconnect()
